@@ -614,6 +614,11 @@
           
           const rawPixData = await response.json();
           
+          // 🔍 DEBUG: Log completo da resposta do backend
+          console.log('\n📦 ==== RESPOSTA RAW DO BACKEND ====');
+          console.log(JSON.stringify(rawPixData, null, 2));
+          console.log('==================================\n');
+          
           // Normalizar resposta para formato esperado
           const pixData = {
             transactionId: rawPixData.transaction_id || rawPixData.hash || rawPixData.id,
@@ -644,7 +649,8 @@
           
           // Salvar dados do pagamento
           const paymentData = JSON.stringify(pixData);
-          console.log('💾 Salvando no localStorage:', paymentData.substring(0, 100) + '...');
+          console.log('💾 Salvando no localStorage (primeiros 100 chars):', paymentData.substring(0, 100) + '...');
+          console.log('🔍 Objeto pixData completo:', pixData);
           localStorage.setItem('current_payment', paymentData);
           
           // Verificar se salvou
