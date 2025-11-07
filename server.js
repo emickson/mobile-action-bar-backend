@@ -270,11 +270,11 @@ const serverHandler = (req, res) => {
           };
           
           // Adicionar hashes apenas se estiverem configurados (senão IronPay cria automaticamente)
-          if (finalOfferHash) {
-            requestData.offer_hash = finalOfferHash;
+          if (offerHash) {
+            requestData.offer_hash = offerHash;
           }
-          if (finalProductHash && requestData.cart.length > 0) {
-            requestData.cart[0].product_hash = finalProductHash;
+          if (productHash && requestData.cart.length > 0) {
+            requestData.cart[0].product_hash = productHash;
           }
           
           console.log('💳 IronPay - Request:');
