@@ -1,0 +1,35 @@
+{
+  "products": [
+    {
+      "id": "1",
+      "name": "Fita Led Luz Interna Neon Painel Carro Tunning Rgb 64 Cor Tensão de operação",
+      "price": 596,
+      "description": "Fita LED RGB com 64 cores diferentes para personalização de veículos",
+      "stock": 100,
+      "active": true,
+      "ironpay": {
+        "offerHash": "CONFIGURE_AQUI",
+        "productHash": "CONFIGURE_AQUI"
+      },
+      "createdAt": "2024-11-07T00:00:00.000Z",
+      "updatedAt": "2024-11-07T00:00:00.000Z"
+    }
+  ],
+  "_metadata": {
+    "version": "1.0.0",
+    "lastUpdate": "2024-11-07T00:00:00.000Z",
+    "notes": [
+      "Preços em centavos (596 = R$ 5,96)",
+      "Configure offerHash e productHash do IronPay no painel: https://app.ironpayapp.com.br",
+      "Adicione novos produtos seguindo o mesmo formato",
+      "Este arquivo é lido pelo backend para validar preços (segurança)"
+    ],
+    "howToConfig": {
+      "step1": "Acesse o painel IronPay: https://app.ironpayapp.com.br",
+      "step2": "Vá em Ofertas e Links",
+      "step3": "Copie o offerHash e productHash da oferta que você criou",
+      "step4": "Cole aqui nos campos ironpay.offerHash e ironpay.productHash",
+      "step5": "Configure o GATEWAY_TOKEN no Railway (variável de ambiente)"
+    }
+  }
+}
