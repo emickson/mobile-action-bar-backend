@@ -522,14 +522,11 @@ class PaymentGateway {
    * @returns {Promise<Object>} - Status do pagamento
    */
   async checkPaymentStatus(transactionId, externalCode = null) {
-    if (!this.config) {
-      throw new Error('Gateway não configurado');
-    }
-    
     try {
       // Para IronPay, Asaas e outros gateways customizados,
       // usar backend para verificar status (evita problemas de CORS)
-      if (this.config.provider === 'custom' || !this.baseURL) {
+      // NÃO precisa de config local porque o backend tem o token
+      if (!this.config || this.config.provider === 'custom' || !this.baseURL) {
         console.log('🔍 Verificando status via backend:', transactionId);
         
         // Detectar URL do backend (mesmo esquema do checkout-v2.html)
@@ -553,6 +550,11 @@ class PaymentGateway {
         
         const data = await response.json();
         return data;
+      }
+      
+      // Para outros gateways (Vegas, Mercado Pago, etc), config é obrigatória
+      if (!this.config) {
+        throw new Error('Gateway não configurado');
       }
       
       // Preparar headers
