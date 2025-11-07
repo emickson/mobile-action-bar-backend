@@ -178,6 +178,7 @@
       <div class="tab" onclick="switchTab('descricao')">Descrição</div>
       <div class="tab" onclick="switchTab('pagamento')">Pagamento</div>
       <div class="tab" onclick="switchTab('gateway')">Gateway Vegas</div>
+      <div class="tab" onclick="switchTab('config')">⚙️ Configurações</div>
     </div>
 
     <!-- Tab: Criativos -->
@@ -643,6 +644,74 @@ Capacidade de Carga de 150KG: Suporta até 150KG.</textarea>
       </div>
     </div>
     
+    <!-- Tab: Configurações -->
+    <div class="tab-content" id="tab-config">
+      <div class="card">
+        <h2 class="card-title">⚙️ Configurações do Sistema</h2>
+        <p style="color:#6b7280;margin-bottom:20px;">Configure o backend e outras opções avançadas</p>
+        
+        <!-- Info box - Hostinger -->
+        <div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:16px;border-radius:8px;margin-bottom:24px;">
+          <h3 style="color:#92400e;font-size:14px;margin-bottom:8px;">🌐 Hospedagem Compartilhada (Hostinger)</h3>
+          <p style="color:#92400e;font-size:13px;line-height:1.6;margin-bottom:0;">
+            Se você usa <strong>hospedagem compartilhada</strong> (sem suporte a Node.js), 
+            você precisa hospedar o backend em outro lugar (Railway, Render, etc) e configurar 
+            a URL abaixo para que o frontend se conecte ao backend correto.
+          </p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">🔗 URL do Backend (API)</label>
+          <input type="url" class="form-input" id="backend-url" placeholder="https://seu-app.railway.app/api/pagar" />
+          <div class="form-help">
+            <strong>Deixe vazio</strong> se o backend está no mesmo servidor (VPS).<br>
+            <strong>Preencha</strong> com a URL do Railway, Render ou outro serviço se usar hospedagem compartilhada.
+          </div>
+        </div>
+
+        <!-- Exemplos -->
+        <div style="background:#dbeafe;border-left:4px solid #3b82f6;padding:16px;border-radius:8px;margin-bottom:20px;">
+          <h3 style="color:#1e40af;font-size:14px;margin-bottom:8px;">💡 Exemplos de URL:</h3>
+          <ul style="color:#1e40af;font-size:13px;padding-left:20px;line-height:1.8;margin:0;">
+            <li><code style="background:#fff;padding:2px 6px;border-radius:4px;">https://mobile-action-bar-backend-production.up.railway.app/api/pagar</code></li>
+            <li><code style="background:#fff;padding:2px 6px;border-radius:4px;">https://seu-app.onrender.com/api/pagar</code></li>
+            <li><code style="background:#fff;padding:2px 6px;border-radius:4px;">https://seu-app.fly.dev/api/pagar</code></li>
+          </ul>
+        </div>
+
+        <!-- Status -->
+        <div id="backend-status-display"></div>
+
+        <!-- Buttons -->
+        <div style="display:flex;gap:12px;margin-top:20px;">
+          <button class="btn btn-primary" onclick="saveBackendConfig()" style="flex:1;">💾 Salvar Configuração</button>
+          <button class="btn btn-secondary" onclick="testBackendConnection()">🔌 Testar Conexão</button>
+          <button class="btn btn-danger" onclick="clearBackendConfig()">🗑️ Limpar</button>
+        </div>
+
+        <!-- Como fazer deploy no Railway -->
+        <div class="card" style="margin-top:24px;">
+          <h3 class="card-title">🚀 Como fazer deploy do backend no Railway (Gratuito)</h3>
+          <ol style="color:#6b7280;font-size:14px;padding-left:20px;line-height:2;margin:0;">
+            <li>Acesse <a href="https://railway.app" target="_blank" style="color:#ff2d55;font-weight:600;">railway.app</a> e faça login com GitHub</li>
+            <li>Clique em "New Project" → "Deploy from GitHub repo"</li>
+            <li>Selecione o repositório <code>mobile-action-bar-backend</code></li>
+            <li>Railway detecta Node.js automaticamente e faz o deploy</li>
+            <li>Em "Settings" → "Networking", clique em "Generate Domain"</li>
+            <li>Copie a URL gerada e cole no campo acima</li>
+            <li>Configure as variáveis de ambiente no Railway:<br>
+              <code style="background:#f1f2f4;padding:8px;border-radius:4px;display:block;margin-top:8px;">
+                NODE_ENV=production<br>
+                PORT=8080<br>
+                ALLOWED_ORIGINS=https://shoptlktok.shop<br>
+                GATEWAY_TOKEN=seu_token_aqui
+              </code>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </div>
+    
     <!-- Original gateway content removed - script below -->
     <script>
     // Funções do Gateway
@@ -743,12 +812,134 @@ Capacidade de Carga de 150KG: Suporta até 150KG.</textarea>
       }
     }
     
-    // Carregar config ao trocar para aba gateway
+    // ========================================
+    // Funções da Aba Configurações (Backend)
+    // ========================================
+    
+    function loadBackendConfig() {
+      const saved = localStorage.getItem('backend_api_url');
+      if (saved) {
+        document.getElementById('backend-url').value = saved;
+        updateBackendStatus(true, saved);
+      } else {
+        updateBackendStatus(false, 'Padrão (mesmo servidor)');
+      }
+    }
+    
+    function updateBackendStatus(configured, message) {
+      const display = document.getElementById('backend-status-display');
+      if (!display) return;
+      
+      if (configured) {
+        display.innerHTML = `
+          <div style="background:#dcfce7;border-left:4px solid #10b981;padding:12px 16px;border-radius:8px;margin-bottom:20px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:20px;">✅</span>
+              <div>
+                <strong style="color:#166534;font-size:14px;">Backend Configurado</strong>
+                <p style="color:#166534;font-size:12px;margin:4px 0 0 0;">${message}</p>
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        display.innerHTML = `
+          <div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:12px 16px;border-radius:8px;margin-bottom:20px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:20px;">⚠️</span>
+              <div>
+                <strong style="color:#92400e;font-size:14px;">Backend no Modo Padrão</strong>
+                <p style="color:#92400e;font-size:12px;margin:4px 0 0 0;">Usando o mesmo servidor (funciona apenas em VPS)</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+    
+    function saveBackendConfig() {
+      const url = document.getElementById('backend-url').value.trim();
+      
+      if (url) {
+        // Validar URL
+        try {
+          new URL(url);
+        } catch (e) {
+          alert('❌ URL inválida!\n\nDigite uma URL completa, ex:\nhttps://seu-app.railway.app/api/pagar');
+          return;
+        }
+        
+        if (!url.includes('/api/pagar')) {
+          alert('⚠️ Atenção!\n\nA URL deve terminar com /api/pagar\n\nEx: https://seu-app.railway.app/api/pagar');
+          return;
+        }
+        
+        localStorage.setItem('backend_api_url', url);
+        updateBackendStatus(true, url);
+        alert('✅ Backend configurado!\n\nURL salva com sucesso.\nAgora o sistema usará o backend externo.');
+      } else {
+        // Remover configuração (usar padrão)
+        localStorage.removeItem('backend_api_url');
+        updateBackendStatus(false);
+        alert('✅ Configuração removida!\n\nSistema voltará a usar o backend padrão (mesmo servidor).');
+      }
+    }
+    
+    async function testBackendConnection() {
+      const url = document.getElementById('backend-url').value.trim();
+      
+      if (!url) {
+        alert('⚠️ Digite uma URL para testar!');
+        return;
+      }
+      
+      const btn = event.target;
+      const originalText = btn.textContent;
+      btn.textContent = '⏳ Testando...';
+      btn.disabled = true;
+      
+      try {
+        // Tentar fazer uma requisição simples
+        const response = await fetch(url, {
+          method: 'HEAD',
+          mode: 'cors'
+        });
+        
+        btn.textContent = originalText;
+        btn.disabled = false;
+        
+        if (response.ok || response.status === 405) {
+          // 405 = Método não permitido (mas servidor respondeu!)
+          alert('✅ Conexão OK!\n\nO backend está respondendo corretamente.\n\nStatus: ' + response.status);
+        } else {
+          alert('⚠️ Backend respondeu com erro!\n\nStatus: ' + response.status + '\n\nVerifique se o backend está rodando.');
+        }
+      } catch (error) {
+        btn.textContent = originalText;
+        btn.disabled = false;
+        
+        alert('❌ Erro de conexão!\n\n' + error.message + '\n\nVerifique:\n1. URL está correta\n2. Backend está rodando\n3. CORS está configurado');
+      }
+    }
+    
+    function clearBackendConfig() {
+      if (confirm('⚠️ Deseja realmente limpar a configuração?')) {
+        localStorage.removeItem('backend_api_url');
+        document.getElementById('backend-url').value = '';
+        updateBackendStatus(false);
+        alert('✅ Configuração removida!');
+      }
+    }
+    
+    // Carregar config ao trocar para aba gateway ou config
     const originalSwitchTab = window.switchTab;
     window.switchTab = function(tabName) {
       originalSwitchTab(tabName);
       if (tabName === 'gateway') {
         loadGatewayConfig();
+      }
+      if (tabName === 'config') {
+        loadBackendConfig();
       }
     };
     </script>

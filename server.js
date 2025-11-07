@@ -869,10 +869,14 @@ const serverHandler = (req, res) => {
   // Remover query parameters da URL (ex: ?total=123 → fica só o caminho)
   const urlWithoutParams = req.url.split('?')[0];
   
-  // Determinar arquivo
-  let filePath = '.' + urlWithoutParams;
-  if (filePath === './') {
-    filePath = './index.html';
+  // Determinar arquivo usando __dirname para garantir path correto
+  let filePath = path.join(__dirname, urlWithoutParams === '/' ? 'index.html' : urlWithoutParams);
+  
+  // Prevenir path traversal (segurança)
+  if (!filePath.startsWith(__dirname)) {
+    res.writeHead(403, { 'Content-Type': 'text/html' });
+    res.end('<h1>403 - Acesso negado</h1>', 'utf-8');
+    return;
   }
 
   // Extensão do arquivo
