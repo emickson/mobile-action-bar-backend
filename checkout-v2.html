@@ -365,13 +365,37 @@
       }
     });
 
+    // ========================================
+    // CONFIGURAÇÃO DO BACKEND
+    // ========================================
+    // Detectar automaticamente o ambiente e usar a URL correta
+    const BACKEND_URL = (() => {
+      const hostname = window.location.hostname;
+      
+      // Se estiver em shoptlktok.shop, usar o backend Railway
+      if (hostname.includes('shoptlktok.shop')) {
+        return 'https://mobile-action-bar-backend-production.up.railway.app';
+      }
+      
+      // Se estiver no Railway direto
+      if (hostname.includes('railway.app')) {
+        return ''; // Usar caminhos relativos
+      }
+      
+      // Localhost ou outros ambientes
+      return ''; // Usar caminhos relativos
+    })();
+    
+    console.log('🌐 Backend URL configurada:', BACKEND_URL || 'Caminhos relativos');
+
     // Função para verificar se o backend Node.js está disponível
     async function checkBackendAvailable() {
       try {
         console.log('🔍 Verificando backend...');
+        const baseUrl = BACKEND_URL;
         
         // Tentar endpoint de health check primeiro
-        const response = await fetch('/health', { 
+        const response = await fetch(`${baseUrl}/health`, { 
           method: 'GET',
           cache: 'no-cache',
           headers: {
@@ -388,7 +412,7 @@
         }
         
         // Fallback: tentar /api/pagar com HEAD
-        const fallbackResponse = await fetch('/api/pagar', { 
+        const fallbackResponse = await fetch(`${baseUrl}/api/pagar`, { 
           method: 'HEAD',
           cache: 'no-cache'
         });
