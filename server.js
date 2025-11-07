@@ -157,21 +157,8 @@ const serverHandler = (req, res) => {
         console.log('Cliente:', customer.name);
         console.log('Descrição:', description);
         
-        // Validação de preço REMOVIDA
-        // O administrador controla os preços no painel admin
-        
-        // Usar hashes de variáveis de ambiente (se configuradas) ou do frontend
-        const finalOfferHash = process.env.OFFER_HASH || offerHash || null;
-        const finalProductHash = process.env.PRODUCT_HASH || productHash || null;
-        
-        console.log('Offer Hash:', finalOfferHash || '⚠️ NULL (IronPay criará automaticamente)');
-        console.log('Product Hash:', finalProductHash || '⚠️ NULL (IronPay criará automaticamente)');
-        
-        if (!finalOfferHash || !finalProductHash) {
-          console.log('💡 MODO AUTOMÁTICO: IronPay criará novos hashes para esta transação');
-        } else {
-          console.log('🔒 MODO MANUAL: Usando hashes fixos');
-        }
+        console.log('Offer Hash:', offerHash || '⚠️ Não fornecido (usará padrão)');
+        console.log('Product Hash:', productHash || '⚠️ Não fornecido (usará padrão)');
         
         const TOKEN = apiKey || process.env.GATEWAY_TOKEN;
         

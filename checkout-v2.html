@@ -535,21 +535,17 @@
           console.log('\n💳 Gerando PIX via backend...');
           
           // Obter hashes específicos deste produto (IronPay)
-          // IMPORTANTE: Cada produto tem seus próprios hashes configurados no painel admin
-          const offerHash = productData.ironpay?.offerHash || gatewayConfig.offerHash || null;
-          const productHash = productData.ironpay?.productHash || gatewayConfig.productHash || null;
+          // IMPORTANTE: Deixar null para o IronPay criar automaticamente
+          // Se quiser usar hashes fixos, configure OFFER_HASH e PRODUCT_HASH no Railway
+          const offerHash = null; // IronPay criará automaticamente
+          const productHash = null; // IronPay criará automaticamente
           
-          console.log('📝 Dados da requisição:');
+          console.log('� Dados da requisição:');
           console.log('   Produto:', productData.name);
-          console.log('   Offer Hash:', offerHash || '⚠️ NÃO CONFIGURADO - Configure no painel admin');
-          console.log('   Product Hash:', productHash || '⚠️ NÃO CONFIGURADO - Configure no painel admin');
+          console.log('   Offer Hash: NULL (IronPay criará automaticamente)');
+          console.log('   Product Hash: NULL (IronPay criará automaticamente)');
           console.log('   Token API presente?', apiKey ? 'SIM' : 'NÃO (servidor usará env)');
-          
-          // Validar hashes (aviso se não configurados)
-          if (!offerHash || !productHash) {
-            console.warn('⚠️ ATENÇÃO: Hashes IronPay não configurados para este produto!');
-            console.warn('Configure os hashes no Painel Admin → Produto → Integração IronPay');
-          }
+          console.log('💡 Modo: Hashes automáticos (IronPay criará novos hashes)');
           
           // Detectar se o backend está disponível
           const isBackendAvailable = await checkBackendAvailable();
