@@ -134,75 +134,8 @@ const serverHandler = (req, res) => {
     return;
   }
   
-  // ========================================
-  // ENDPOINT: /api/produtos/:id (Buscar produto com preço seguro)
-  // ========================================
-  if (req.url.startsWith('/api/produtos/') && req.method === 'GET') {
-    const productId = req.url.split('/api/produtos/')[1];
-    
-    try {
-      // Ler products-db.json
-      const productsData = fs.readFileSync(path.join(__dirname, 'products-db.json'), 'utf8');
-      const db = JSON.parse(productsData);
-      
-      // Buscar produto por ID
-      const product = db.products.find(p => p.id === productId);
-      
-      if (!product) {
-        res.writeHead(404, {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        });
-        res.end(JSON.stringify({
-          success: false,
-          error: 'Produto não encontrado'
-        }));
-        return;
-      }
-      
-      // Verificar se produto está ativo
-      if (!product.active) {
-        res.writeHead(404, {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        });
-        res.end(JSON.stringify({
-          success: false,
-          error: 'Produto indisponível'
-        }));
-        return;
-      }
-      
-      // Retornar produto (sem expor hashes do IronPay)
-      res.writeHead(200, {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      });
-      res.end(JSON.stringify({
-        success: true,
-        product: {
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          description: product.description,
-          stock: product.stock
-          // ironpay hashes NÃO são expostos (segurança)
-        }
-      }));
-    } catch (error) {
-      console.error('❌ Erro ao ler products-db.json:', error);
-      res.writeHead(500, {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      });
-      res.end(JSON.stringify({
-        success: false,
-        error: 'Erro ao buscar produto',
-        details: error.message
-      }));
-    }
-    return;
-  }
+  // Endpoint /api/produtos/:id REMOVIDO
+  // Não é mais necessário sem validação de preços
 
   // ========================================
   // ENDPOINT: /api/pagar (Gerar pagamento PIX)
@@ -220,78 +153,12 @@ const serverHandler = (req, res) => {
         const { amount, description, customer, apiKey, offerHash, productHash, cart } = JSON.parse(body);
         
         console.log('\n💳 ==== NOVA REQUISIÇÃO DE PAGAMENTO ====');
-        console.log('Valor recebido:', amount);
+        console.log('Valor recebido:', amount, '(R$', (amount/100).toFixed(2), ')');
         console.log('Cliente:', customer.name);
         console.log('Descrição:', description);
         
-        // 🔒 VALIDAÇÃO DE PREÇO (Segurança)
-        // Verificar se o valor enviado corresponde ao preço real do produto
-        if (cart && cart.length > 0) {
-          try {
-            const productsData = fs.readFileSync(path.join(__dirname, 'products-db.json'), 'utf8');
-            const db = JSON.parse(productsData);
-            
-            let totalCalculado = 0;
-            
-            for (const item of cart) {
-              // Buscar por ID do produto (não hash, pois hash é gerado pelo IronPay)
-              const productId = item.product_id || item.id || '1'; // Fallback para produto 1
-              const product = db.products.find(p => p.id === productId);
-              
-              if (!product) {
-                console.error('❌ Produto não encontrado no banco:', productId);
-                res.writeHead(400, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ 
-                  success: false, 
-                  error: 'Produto inválido'
-                }));
-                return;
-              }
-              
-              if (!product.active) {
-                console.error('❌ Produto inativo:', product.name);
-                res.writeHead(400, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ 
-                  success: false, 
-                  error: 'Produto indisponível'
-                }));
-                return;
-              }
-              
-              const quantity = item.quantity || 1;
-              totalCalculado += product.price * quantity;
-            }
-            
-            // Permitir diferença para frete e descontos
-            // TODO: Enviar valor do frete separadamente do frontend
-            const diferencaAceitavel = 2000; // R$ 20,00 (considera frete)
-            const diferenca = Math.abs(amount - totalCalculado);
-            
-            if (diferenca > diferencaAceitavel) {
-              console.error('❌ TENTATIVA DE FRAUDE DETECTADA!');
-              console.error('Valor enviado:', amount, '(R$', (amount/100).toFixed(2), ')');
-              console.error('Valor real:', totalCalculado, '(R$', (totalCalculado/100).toFixed(2), ')');
-              console.error('Diferença:', diferenca, 'centavos');
-              
-              res.writeHead(400, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ 
-                success: false, 
-                error: 'Valor inválido. Por favor, recarregue a página.'
-              }));
-              return;
-            }
-            
-            console.log('✅ Validação de preço: OK');
-            console.log('   Valor enviado:', amount, 'centavos');
-            console.log('   Valor calculado:', totalCalculado, 'centavos');
-            console.log('   Diferença:', diferenca, 'centavos (aceitável)');
-            
-          } catch (error) {
-            console.error('❌ Erro ao validar preço:', error);
-            // Continuar mesmo com erro de validação (modo degradação)
-            console.warn('⚠️ Prosseguindo sem validação de preço (modo degradação)');
-          }
-        }
+        // Validação de preço REMOVIDA
+        // O administrador controla os preços no painel admin
         
         console.log('Offer Hash:', offerHash || '⚠️ Não fornecido (usará padrão)');
         console.log('Product Hash:', productHash || '⚠️ Não fornecido (usará padrão)');
