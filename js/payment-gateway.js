@@ -526,11 +526,35 @@ class PaymentGateway {
       throw new Error('Gateway não configurado');
     }
     
-    if (!this.baseURL && this.config.provider !== 'custom') {
-      throw new Error('Gateway não configurado');
-    }
-
     try {
+      // Para IronPay, Asaas e outros gateways customizados,
+      // usar backend para verificar status (evita problemas de CORS)
+      if (this.config.provider === 'custom' || !this.baseURL) {
+        console.log('🔍 Verificando status via backend:', transactionId);
+        
+        // Detectar URL do backend (mesmo esquema do checkout-v2.html)
+        const hostname = window.location.hostname;
+        const BACKEND_URL = hostname.includes('shoptlktok.shop')
+          ? 'https://mobile-action-bar-backend-production.up.railway.app'
+          : '';
+        
+        const response = await fetch(`${BACKEND_URL}/api/pagamento/status/${transactionId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          // Se backend não tem endpoint, retornar status pendente
+          console.warn('⚠️ Endpoint de status não disponível, assumindo pendente');
+          return { status: 'pending', transactionId };
+        }
+        
+        const data = await response.json();
+        return data;
+      }
+      
       // Preparar headers
       const headers = {};
 

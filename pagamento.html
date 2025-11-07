@@ -339,13 +339,24 @@
 
     // Load payment settings from admin or Vegas
     function loadPaymentSettings() {
+      console.log('🔍 ==== CARREGANDO DADOS DE PAGAMENTO ====');
+      
       // Primeiro, verificar se há pagamento do Vegas
       const currentPayment = localStorage.getItem('current_payment');
+      console.log('current_payment existe no localStorage?', currentPayment ? 'SIM' : 'NÃO');
       
       if (currentPayment) {
         // Pagamento gerado pelo Vegas
-        const data = JSON.parse(currentPayment);
-        console.log('Vegas payment data loaded:', data);
+        try {
+          const data = JSON.parse(currentPayment);
+          console.log('✅ Dados do pagamento carregados:');
+          console.log('   transactionId:', data.transactionId || 'AUSENTE');
+          console.log('   hash:', data.hash || 'AUSENTE');
+          console.log('   pixCode:', data.pixCode ? 'PRESENTE (' + data.pixCode.length + ' chars)' : 'AUSENTE');
+          console.log('   qr_code_base64:', data.qr_code_base64 ? 'PRESENTE' : 'AUSENTE');
+          console.log('   qr_code_url:', data.qr_code_url ? 'PRESENTE' : 'AUSENTE');
+          console.log('   qrcodeUrl:', data.qrcodeUrl ? 'PRESENTE' : 'AUSENTE');
+          console.log('   amount:', data.amount || 'AUSENTE');
         
         // Update PIX code
         if (data.pixCode) {
@@ -377,13 +388,40 @@
           qrCodeDiv.innerHTML = `<img src="${qrCodeUrl}" alt="QR Code PIX" style="max-width:100%;height:auto;border-radius:12px;" />`;
           console.log('⚠️ QR Code gerado via API externa (fallback)');
         } else {
-          console.error('❌ Nenhum QR Code disponível!');
+          console.error('❌ ERRO: Nenhum QR Code disponível!');
+          console.error('Estrutura dos dados recebidos:', JSON.stringify(data, null, 2));
+          
+          // Mostrar mensagem de erro para o usuário
+          qrCodeDiv.innerHTML = `
+            <div style="padding:20px;text-align:center;color:#ef4444;">
+              <p style="font-weight:600;margin-bottom:8px;">❌ Erro ao carregar QR Code</p>
+              <p style="font-size:13px;color:#6b7280;">O gateway de pagamento não retornou o QR Code.</p>
+              <button onclick="location.reload()" style="margin-top:12px;padding:8px 16px;background:#ff2d55;color:#fff;border:0;border-radius:8px;cursor:pointer;">Tentar Novamente</button>
+            </div>
+          `;
         }
         
-        // Verificação automática de status desativada (opcional)
-        // if (data.transactionId) {
-        //   startPaymentStatusCheck(data.transactionId, data.externalCode);
-        // }
+        } catch (error) {
+          console.error('❌ Erro ao processar dados do pagamento:', error);
+          const qrCodeDiv = document.getElementById('qr-code');
+          if (qrCodeDiv) {
+            qrCodeDiv.innerHTML = `
+              <div style="padding:20px;text-align:center;color:#ef4444;">
+                <p style="font-weight:600;">❌ Erro ao carregar pagamento</p>
+                <p style="font-size:13px;margin-top:8px;">${error.message}</p>
+              </div>
+            `;
+          }
+        }
+        
+        // Verificação automática de status
+        if (data.transactionId || data.hash) {
+          const txId = data.transactionId || data.hash;
+          console.log('🔄 Iniciando monitoramento de pagamento:', txId);
+          startPaymentStatusCheck(txId, data.hash);
+        } else {
+          console.warn('⚠️ Transaction ID não encontrado, verificação automática desativada');
+        }
         
       } else {
         // Modo manual (configuração do admin)

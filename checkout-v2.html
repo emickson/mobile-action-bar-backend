@@ -552,11 +552,9 @@
           }
           
           // Detectar se o backend está disponível
-          const backendURL = await checkBackendAvailable() 
-            ? '/api/pagar' 
-            : null;
+          const isBackendAvailable = await checkBackendAvailable();
           
-          if (!backendURL) {
+          if (!isBackendAvailable) {
             console.warn('⚠️ Backend não disponível. Usando modo direto (apenas para testes).');
             // Modo de fallback - você precisará implementar lógica alternativa aqui
             // Por exemplo: redirecionar para página de PIX manual
@@ -564,6 +562,10 @@
             window.location.href = `pagamento.html?total=R$ ${totalFormatted}&shipping=${shipping}&qty=${qty}&mode=manual`;
             return;
           }
+          
+          // Construir URL do endpoint usando a variável BACKEND_URL configurada
+          const backendURL = `${BACKEND_URL}/api/pagar`;
+          console.log('📡 URL da requisição:', backendURL);
           
           const response = await fetch(backendURL, {
             method: 'POST',

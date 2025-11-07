@@ -888,6 +888,129 @@ const serverHandler = (req, res) => {
   }
 
   // ========================================
+  // ENDPOINT: /api/pagamento/status/:id
+  // Verifica status de pagamento no IronPay
+  // ========================================
+  if (req.url.startsWith('/api/pagamento/status/') && req.method === 'GET') {
+    const transactionId = req.url.split('/api/pagamento/status/')[1];
+    
+    console.log('\n🔍 ==== VERIFICAÇÃO DE STATUS ====');
+    console.log('Transaction ID:', transactionId);
+    
+    const TOKEN = process.env.GATEWAY_TOKEN;
+    
+    if (!TOKEN) {
+      console.error('❌ Token IronPay não configurado!');
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ 
+        success: false, 
+        error: 'Token não configurado' 
+      }));
+      return;
+    }
+    
+    // Endpoint IronPay para consultar status
+    const IRONPAY_API = `https://api.ironpayapp.com.br/api/public/v1/transactions/${transactionId}?api_token=${TOKEN}`;
+    
+    console.log('🔄 Consultando IronPay...');
+    
+    const options = {
+      hostname: 'api.ironpayapp.com.br',
+      path: `/api/public/v1/transactions/${transactionId}?api_token=${TOKEN}`,
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    };
+    
+    const proxyReq = https.request(options, (proxyRes) => {
+      let responseData = '';
+      
+      proxyRes.on('data', (chunk) => {
+        responseData += chunk;
+      });
+      
+      proxyRes.on('end', () => {
+        console.log('📥 Resposta IronPay (status ' + proxyRes.statusCode + '):', responseData.substring(0, 200));
+        
+        try {
+          const data = JSON.parse(responseData);
+          
+          if (proxyRes.statusCode === 200) {
+            // Normalizar status IronPay para formato padrão
+            const status = data.payment_status || data.status || 'pending';
+            
+            // Mapear status IronPay para status padrão
+            const statusMap = {
+              'paid': 'paid',
+              'approved': 'paid',
+              'waiting_payment': 'pending',
+              'processing': 'pending',
+              'cancelled': 'cancelled',
+              'expired': 'expired',
+              'refused': 'cancelled',
+              'refunded': 'refunded'
+            };
+            
+            const normalizedStatus = statusMap[status] || 'pending';
+            
+            console.log('✅ Status:', status, '→', normalizedStatus);
+            
+            res.writeHead(200, {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*'
+            });
+            res.end(JSON.stringify({
+              success: true,
+              status: normalizedStatus,
+              transactionId: transactionId,
+              originalStatus: status,
+              paidAt: data.date_approved,
+              amount: data.amount
+            }));
+          } else {
+            console.error('❌ Erro ao consultar status:', data);
+            res.writeHead(proxyRes.statusCode, {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*'
+            });
+            res.end(JSON.stringify({
+              success: false,
+              error: data.message || 'Erro ao consultar status'
+            }));
+          }
+        } catch (parseError) {
+          console.error('❌ Erro ao parsear resposta:', parseError);
+          res.writeHead(500, {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          });
+          res.end(JSON.stringify({ 
+            success: false, 
+            error: 'Resposta inválida do gateway' 
+          }));
+        }
+      });
+    });
+    
+    proxyReq.on('error', (error) => {
+      console.error('❌ Erro na requisição:', error);
+      res.writeHead(500, { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      });
+      res.end(JSON.stringify({ 
+        success: false, 
+        error: error.message 
+      }));
+    });
+    
+    proxyReq.end();
+    return;
+  }
+
+  // ========================================
   // SERVIR ARQUIVOS ESTÁTICOS
   // (deve vir DEPOIS das rotas API)
   // ========================================
