@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pagamento</title>
+  <style>
+    :root {
+      --pink: #ff2d55;
+      --pink-dark: #e02649;
+      --gray-text: #1f2328;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; color: #111; background: #f3f4f6; overflow-x: hidden; }
+    .app {
+      width: 100%;
+      max-width: 420px;
+      margin: 0 auto;
+      background: #fff;
+      min-height: 100dvh;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .header { display:flex; align-items:center; gap:12px; padding: 14px 12px; border-bottom:1px solid #eef0f3; background:#fff; }
+    .back-btn { width:32px; height:32px; display:grid; place-items:center; background:transparent; border:0; color:#111; cursor:pointer; }
+    .header-title { font-weight:700; font-size:16px; color:var(--gray-text); }
+
+    /* Content */
+    .content { flex:1; padding:16px 12px 20px; }
+
+    /* Product summary */
+    .product-summary { display:flex; gap:12px; padding:12px; background:#fff; border:1px solid #eef0f3; border-radius:12px; margin-bottom:16px; }
+    .product-img { width:80px; height:80px; border-radius:8px; object-fit:cover; background:#f6f7f9; }
+    .product-info { flex:1; }
+    .product-name { font-size:14px; color:var(--gray-text); line-height:1.3; margin-bottom:8px; }
+    .product-price { font-weight:800; font-size:20px; color:var(--gray-text); }
+
+    /* Payment summary */
+    .payment-summary { background:#fff; border:1px solid #eef0f3; border-radius:12px; padding:14px; margin-bottom:20px; }
+    .summary-row { display:flex; justify-content:space-between; margin-bottom:10px; }
+    .summary-row:last-child { margin-bottom:0; padding-top:10px; border-top:1px solid #eef0f3; }
+    .summary-label { color:#6b7280; font-size:14px; }
+    .summary-value { font-weight:600; color:var(--gray-text); }
+    .summary-value.free { color:#10b981; }
+    .summary-total { font-weight:800; font-size:18px; color:var(--gray-text); }
+
+    /* Timer */
+    .timer-section { background:#fff; border:1px solid #eef0f3; border-radius:12px; padding:14px; margin-bottom:20px; }
+    .timer-header { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+    .timer-icon { width:20px; height:20px; color:#6b7280; }
+    .timer-text { font-size:14px; color:var(--gray-text); }
+    .timer-bar { width:100%; height:8px; background:#eef0f3; border-radius:4px; overflow:hidden; margin-bottom:6px; }
+    .timer-progress { height:100%; background:linear-gradient(90deg, var(--pink), #ff6b9d); width:99%; transition:width 1s linear; }
+    .timer-label { font-size:12px; color:#6b7280; text-align:center; }
+
+    /* QR Code */
+    .qr-section { background:#fff; border:1px solid #eef0f3; border-radius:12px; padding:20px; text-align:center; margin-bottom:16px; }
+    .qr-title { font-weight:700; font-size:16px; color:var(--gray-text); margin-bottom:16px; }
+    .qr-code { width:240px; height:240px; margin:0 auto 16px; background:#f6f7f9; border-radius:12px; display:flex; align-items:center; justify-content:center; }
+    .qr-code img { width:100%; height:100%; object-fit:contain; }
+    
+    /* Download and Copy buttons */
+    .qr-actions { display:flex; flex-direction:column; gap:12px; margin-bottom:16px; }
+    .btn-download { display:flex; align-items:center; justify-content:center; gap:8px; padding:12px; background:#fff; border:1px solid #e7e9ec; border-radius:8px; color:var(--gray-text); font-weight:600; cursor:pointer; }
+    .btn-download:active { background:#f9fafb; }
+    .btn-copy-pix { display:flex; align-items:center; justify-content:center; gap:8px; padding:14px; background:var(--pink); border:0; border-radius:8px; color:#fff; font-weight:700; font-size:15px; cursor:pointer; }
+    .btn-copy-pix:active { background:var(--pink-dark); }
+    .btn-payment-done { display:none; align-items:center; justify-content:center; gap:8px; padding:14px; background:#10b981; border:0; border-radius:8px; color:#fff; font-weight:700; font-size:15px; cursor:pointer; margin-top:16px; }
+    .btn-payment-done.show { display:flex; }
+    .btn-payment-done:active { background:#059669; }
+    .btn-icon { width:20px; height:20px; }
+    .pix-code-text { font-size:12px; color:#6b7280; margin-bottom:16px; }
+    .pix-code-box { background:#f6f7f9; padding:12px; border-radius:8px; font-size:11px; color:#6b7280; word-break:break-all; line-height:1.4; margin-bottom:16px; max-height:80px; overflow-y:auto; }
+    
+    /* Instructions */
+    .instructions-section { background:#fff; border:1px solid #eef0f3; border-radius:12px; padding:16px; margin-bottom:16px; }
+    .instructions-title { display:flex; align-items:center; gap:8px; font-weight:700; font-size:15px; color:var(--gray-text); margin-bottom:12px; }
+    .instructions-icon { width:20px; height:20px; color:#6b7280; }
+    .instructions-list { list-style:none; padding:0; margin:0; }
+    .instructions-list li { font-size:14px; color:#6b7280; line-height:1.6; margin-bottom:8px; padding-left:20px; position:relative; }
+    .instructions-list li::before { content:''; position:absolute; left:0; top:8px; width:6px; height:6px; background:#6b7280; border-radius:50%; }
+    
+    /* Status */
+    .status-section { background:#fff; border:1px solid #eef0f3; border-radius:12px; padding:16px; }
+    .status-text { font-size:13px; color:#6b7280; line-height:1.5; margin-bottom:12px; }
+    .status-row { display:flex; align-items:center; gap:8px; }
+    .status-label { font-weight:700; font-size:14px; color:var(--gray-text); }
+    .status-value { display:flex; align-items:center; gap:6px; color:#f59e0b; font-weight:600; font-size:14px; }
+    .status-icon { width:16px; height:16px; }
+    .status-id { font-size:12px; color:#9aa1a9; margin-top:6px; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <button class="back-btn" onclick="history.back()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+      </button>
+      <h1 class="header-title">Pagamento</h1>
+    </header>
+
+    <main class="content">
+      <div class="product-summary">
+        <img class="product-img" id="payment-product-img" src="" alt="Produto" />
+        <div class="product-info">
+          <div class="product-name" id="payment-product-name">Patinete Elétrico Scooter Para Adultos 350W Capacidade de Carga de 150KG</div>
+          <div class="product-price" id="payment-product-price">R$ 1.574,99</div>
+        </div>
+      </div>
+
+      <div class="payment-summary">
+        <div class="summary-row">
+          <span class="summary-label">Frete:</span>
+          <span class="summary-value free" id="payment-shipping">Grátis</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Total:</span>
+          <span class="summary-total" id="payment-total">R$ 1.574,99</span>
+        </div>
+      </div>
+
+      <div class="timer-section">
+        <div class="timer-header">
+          <svg class="timer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6v6l4 2"/>
+          </svg>
+          <span class="timer-text">Tempo restante para pagamento</span>
+        </div>
+        <div class="timer-bar">
+          <div class="timer-progress" id="timer-progress"></div>
+        </div>
+        <div class="timer-label" id="timer-label">99% do tempo disponível</div>
+      </div>
+
+      <div class="qr-section">
+        <h2 class="qr-title">Escaneie o QR Code no seu banco</h2>
+        <div class="qr-code" id="qr-code">
+          <svg width="200" height="200" viewBox="0 0 200 200" fill="none">
+            <!-- QR Code pattern -->
+            <rect width="200" height="200" fill="white"/>
+            <g fill="black">
+              <!-- Top-left finder -->
+              <rect x="10" y="10" width="60" height="60"/>
+              <rect x="20" y="20" width="40" height="40" fill="white"/>
+              <rect x="30" y="30" width="20" height="20" fill="black"/>
+              
+              <!-- Top-right finder -->
+              <rect x="130" y="10" width="60" height="60"/>
+              <rect x="140" y="20" width="40" height="40" fill="white"/>
+              <rect x="150" y="30" width="20" height="20" fill="black"/>
+              
+              <!-- Bottom-left finder -->
+              <rect x="10" y="130" width="60" height="60"/>
+              <rect x="20" y="140" width="40" height="40" fill="white"/>
+              <rect x="30" y="150" width="20" height="20" fill="black"/>
+              
+              <!-- Data pattern (simplified) -->
+              <rect x="90" y="10" width="10" height="10"/>
+              <rect x="110" y="10" width="10" height="10"/>
+              <rect x="90" y="30" width="10" height="10"/>
+              <rect x="110" y="30" width="10" height="10"/>
+              <rect x="90" y="50" width="10" height="10"/>
+              <rect x="110" y="50" width="10" height="10"/>
+              
+              <rect x="10" y="90" width="10" height="10"/>
+              <rect x="30" y="90" width="10" height="10"/>
+              <rect x="50" y="90" width="10" height="10"/>
+              <rect x="10" y="110" width="10" height="10"/>
+              <rect x="30" y="110" width="10" height="10"/>
+              <rect x="50" y="110" width="10" height="10"/>
+              
+              <rect x="90" y="90" width="10" height="10"/>
+              <rect x="110" y="90" width="10" height="10"/>
+              <rect x="130" y="90" width="10" height="10"/>
+              <rect x="150" y="90" width="10" height="10"/>
+              <rect x="170" y="90" width="10" height="10"/>
+              <rect x="90" y="110" width="10" height="10"/>
+              <rect x="110" y="110" width="10" height="10"/>
+              <rect x="130" y="110" width="10" height="10"/>
+              <rect x="150" y="110" width="10" height="10"/>
+              <rect x="170" y="110" width="10" height="10"/>
+              
+              <rect x="90" y="130" width="10" height="10"/>
+              <rect x="110" y="130" width="10" height="10"/>
+              <rect x="130" y="130" width="10" height="10"/>
+              <rect x="150" y="130" width="10" height="10"/>
+              <rect x="170" y="130" width="10" height="10"/>
+              <rect x="90" y="150" width="10" height="10"/>
+              <rect x="110" y="150" width="10" height="10"/>
+              <rect x="130" y="150" width="10" height="10"/>
+              <rect x="150" y="150" width="10" height="10"/>
+              <rect x="170" y="150" width="10" height="10"/>
+              <rect x="90" y="170" width="10" height="10"/>
+              <rect x="110" y="170" width="10" height="10"/>
+              <rect x="130" y="170" width="10" height="10"/>
+              <rect x="150" y="170" width="10" height="10"/>
+              <rect x="170" y="170" width="10" height="10"/>
+            </g>
+          </svg>
+        </div>
+        
+        <div class="qr-actions">
+          <button class="btn-download" onclick="downloadQR()">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Baixar código QR
+          </button>
+          <button class="btn-copy-pix" onclick="copyPixCode(event)">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            Copiar Código PIX
+          </button>
+        </div>
+        
+        <p class="pix-code-text">Ou use o código Copia e Cola</p>
+        <div class="pix-code-box" id="pix-code">
+00020126580014br.gov.bcb.pix0136a3b4c5d6-e7f8-9012-3456-789012345678520400005303986540510.005802BR5913LOJA EXEMPLO6009SAO PAULO62070503***6304ABCD
+        </div>
+      </div>
+
+      <div class="instructions-section">
+        <div class="instructions-title">
+          <svg class="instructions-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+          Como pagar:
+        </div>
+        <ol class="instructions-list">
+          <li>Abra o aplicativo do seu banco</li>
+          <li>Escolha pagar com PIX QR Code ou Cópia e Cola</li>
+          <li>Escaneie o QR Code ou cole o código acima</li>
+          <li>Confirme as informações de pagamento</li>
+        </ol>
+      </div>
+
+      <div class="status-section">
+        <p class="status-text">
+          Após o pagamento, seu pedido será processado e embalado para envio.
+        </p>
+        <div class="status-row">
+          <span class="status-label">Status:</span>
+          <span class="status-value">
+            <svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+            Aguardando pagamento...
+          </span>
+        </div>
+        <div class="status-id">AGUARDANDO_PAGAMENTO</div>
+      </div>
+
+      <button class="btn-payment-done" id="btn-payment-done" onclick="goToConfirmation()">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        Pagamento Efetuado
+      </button>
+    </main>
+  </div>
+
+  <script>
+    // Timer countdown - 20 minutes (1200 seconds)
+    let timeRemaining = 1200; // 20 minutes in seconds
+    const totalTime = 1200;
+    
+    function updateTimer() {
+      if (timeRemaining <= 0) {
+        timeRemaining = 0;
+        clearInterval(timerInterval);
+        document.getElementById('timer-label').textContent = 'Tempo esgotado';
+        return;
+      }
+      
+      // Calculate percentage
+      const percentage = (timeRemaining / totalTime) * 100;
+      document.getElementById('timer-progress').style.width = percentage + '%';
+      
+      // Format time as MM:SS
+      const minutes = Math.floor(timeRemaining / 60);
+      const seconds = timeRemaining % 60;
+      const timeString = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      document.getElementById('timer-label').textContent = `${timeString} restantes`;
+      
+      timeRemaining--;
+    }
+    
+    // Update timer every second
+    updateTimer(); // Initial call
+    const timerInterval = setInterval(updateTimer, 1000);
+
+    // Load product data from admin
+    function loadProductData() {
+      const productData = localStorage.getItem('product_data');
+      if (productData) {
+        const data = JSON.parse(productData);
+        
+        // Update product name
+        if (data.name) {
+          document.getElementById('payment-product-name').textContent = data.name;
+        }
+        
+        // Update price
+        if (data.price) {
+          const priceFormatted = 'R$ ' + data.price.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+          document.getElementById('payment-product-price').textContent = priceFormatted;
+        }
+        
+        // Update image
+        if (data.image) {
+          window.PRODUCT_IMAGE_URL = data.image;
+          document.getElementById('payment-product-img').src = data.image;
+        }
+      }
+    }
+    loadProductData();
+
+    // Load product image if available (fallback)
+    const productImg = window.PRODUCT_IMAGE_URL || '';
+    if (productImg && !localStorage.getItem('product_data')) {
+      document.getElementById('payment-product-img').src = productImg;
+    }
+
+    // Load payment settings from admin or Vegas
+    function loadPaymentSettings() {
+      // Primeiro, verificar se há pagamento do Vegas
+      const currentPayment = localStorage.getItem('current_payment');
+      
+      if (currentPayment) {
+        // Pagamento gerado pelo Vegas
+        const data = JSON.parse(currentPayment);
+        console.log('Vegas payment data loaded:', data);
+        
+        // Update PIX code
+        if (data.pixCode) {
+          const pixCodeElement = document.getElementById('pix-code');
+          if (pixCodeElement) {
+            pixCodeElement.textContent = data.pixCode;
+          }
+        }
+        
+        // Update QR Code image
+        const qrCodeDiv = document.getElementById('qr-code');
+        if (!qrCodeDiv) return;
+        
+        // Prioridade 1: QR Code base64 do gateway (Asaas, TriboPay)
+        if (data.qr_code_base64) {
+          qrCodeDiv.innerHTML = `<img src="${data.qr_code_base64}" alt="QR Code PIX" style="max-width:100%;height:auto;border-radius:12px;" />`;
+          console.log('✅ QR Code do Asaas carregado!');
+        }
+        // Prioridade 2: URL do QR Code
+        else if (data.qrcodeUrl || data.qr_code_url) {
+          const url = data.qrcodeUrl || data.qr_code_url;
+          qrCodeDiv.innerHTML = `<img src="${url}" alt="QR Code PIX" style="max-width:100%;height:auto;border-radius:12px;" />`;
+          console.log('✅ QR Code por URL carregado!');
+        }
+        // Prioridade 3: Gerar QR Code a partir do código PIX (fallback)
+        else if (data.pixCode || data.pix_code) {
+          const pixCode = data.pixCode || data.pix_code;
+          const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(pixCode)}`;
+          qrCodeDiv.innerHTML = `<img src="${qrCodeUrl}" alt="QR Code PIX" style="max-width:100%;height:auto;border-radius:12px;" />`;
+          console.log('⚠️ QR Code gerado via API externa (fallback)');
+        } else {
+          console.error('❌ Nenhum QR Code disponível!');
+        }
+        
+        // Verificação automática de status desativada (opcional)
+        // if (data.transactionId) {
+        //   startPaymentStatusCheck(data.transactionId, data.externalCode);
+        // }
+        
+      } else {
+        // Modo manual (configuração do admin)
+        const paymentData = localStorage.getItem('payment_data');
+        console.log('Loading manual payment data...', paymentData);
+        
+        if (paymentData) {
+          const data = JSON.parse(paymentData);
+          console.log('Manual payment data loaded:', data);
+          
+          // Update PIX code
+          if (data.pixCode) {
+            const pixCodeElement = document.getElementById('pix-code');
+            if (pixCodeElement) {
+              pixCodeElement.textContent = data.pixCode;
+            }
+          }
+          
+          // Update QR Code image if available
+          if (data.qrcodeUrl) {
+            const qrCodeDiv = document.getElementById('qr-code');
+            if (qrCodeDiv) {
+              qrCodeDiv.innerHTML = `<img src="${data.qrcodeUrl}" alt="QR Code PIX" style="max-width:100%;height:auto;border-radius:12px;" />`;
+            }
+          } else if (data.pixCode) {
+            // Gerar QR Code usando API pública
+            const qrCodeDiv = document.getElementById('qr-code');
+            if (qrCodeDiv) {
+              const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(data.pixCode)}`;
+              qrCodeDiv.innerHTML = `<img src="${qrCodeUrl}" alt="QR Code PIX" style="max-width:100%;height:auto;border-radius:12px;" />`;
+            }
+          }
+          // Verificar se precisa fechar o bloco if original
+          if (false) {
+            const qrCodeDiv = document.getElementById('qr-code');
+            if (qrCodeDiv) {
+              qrCodeDiv.innerHTML = `<img src="${data.qrcodeUrl}" alt="QR Code PIX" style="max-width:100%;height:auto;" />`;
+            }
+          }
+          
+          // Update confirmation URL
+          if (data.confirmationUrl) {
+            window.CONFIRMATION_PAGE_URL = data.confirmationUrl;
+          }
+        } else {
+          console.log('No payment data found in localStorage');
+        }
+      }
+    }
+    
+    // Verificação automática de status do pagamento
+    let statusCheckInterval = null;
+    
+    function startPaymentStatusCheck(transactionId, externalCode) {
+      console.log('🔄 Iniciando verificação de status...', transactionId);
+      
+      const gateway = new PaymentGateway();
+      let checkCount = 0;
+      const maxChecks = 360; // 30 minutos (360 * 5 segundos)
+      
+      const checkStatus = async () => {
+        try {
+          checkCount++;
+          console.log(`Verificando status (${checkCount}/${maxChecks})...`);
+          
+          const status = await gateway.checkPaymentStatus(transactionId, externalCode);
+          console.log('Status recebido:', status);
+          
+          // Atualizar indicador visual
+          const statusElement = document.getElementById('payment-status');
+          if (statusElement) {
+            if (status.status === 'paid') {
+              statusElement.textContent = '✅ Pagamento Confirmado!';
+              statusElement.style.color = '#10b981';
+            } else if (status.status === 'pending') {
+              statusElement.textContent = '⏳ Aguardando pagamento...';
+              statusElement.style.color = '#f59e0b';
+            } else if (status.status === 'expired') {
+              statusElement.textContent = '⏰ Pagamento expirado';
+              statusElement.style.color = '#ef4444';
+            }
+          }
+          
+          // Se pagamento foi aprovado, redirecionar
+          if (status.status === 'paid' || status.status === 'approved') {
+            clearInterval(statusCheckInterval);
+            showNotification('✅ Pagamento confirmado! Redirecionando...', 'success');
+            
+            // Limpar dados temporários
+            localStorage.removeItem('current_payment');
+            
+            // Redirecionar após 2 segundos
+            setTimeout(() => {
+              goToConfirmation();
+            }, 2000);
+          }
+          
+          // Se expirou ou foi cancelado, parar verificação
+          if (status.status === 'expired' || status.status === 'cancelled') {
+            clearInterval(statusCheckInterval);
+            showNotification('⚠️ Pagamento expirado ou cancelado', 'warning');
+          }
+          
+          // Parar após máximo de tentativas
+          if (checkCount >= maxChecks) {
+            clearInterval(statusCheckInterval);
+            console.log('Verificação de status encerrada (timeout)');
+          }
+          
+        } catch (error) {
+          console.error('Erro ao verificar status:', error);
+          // Continuar tentando mesmo com erro
+        }
+      };
+      
+      // Verificar imediatamente
+      checkStatus();
+      
+      // Continuar verificando a cada 5 segundos
+      statusCheckInterval = setInterval(checkStatus, 5000);
+    }
+    
+    // Call after DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadPaymentSettings);
+    } else {
+      loadPaymentSettings();
+    }
+
+    // Get payment info from URL params or localStorage
+    const urlParams = new URLSearchParams(window.location.search);
+    const total = urlParams.get('total') || 'R$ 1.574,99';
+    const shipping = urlParams.get('shipping') || 'Grátis';
+    
+    document.getElementById('payment-total').textContent = total;
+    document.getElementById('payment-shipping').textContent = shipping;
+    if (shipping !== 'Grátis') {
+      document.getElementById('payment-shipping').classList.remove('free');
+    }
+
+    // Copy PIX code function
+    function copyPixCode(event) {
+      const pixCodeElement = document.getElementById('pix-code');
+      const pixCode = pixCodeElement.textContent.trim();
+      const button = event.target.closest('button');
+      
+      console.log('Copying PIX code:', pixCode); // Debug
+      
+      if (!pixCode || pixCode.length < 10) {
+        showNotification('⚠️ Nenhum código PIX configurado!', 'error');
+        return;
+      }
+      
+      navigator.clipboard.writeText(pixCode).then(() => {
+        // Change button text temporarily
+        const originalText = button.innerHTML;
+        button.innerHTML = `
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          Código Copiado!
+        `;
+        button.style.background = '#10b981';
+        
+        // Show notification
+        showNotification('✅ Código PIX copiado com sucesso!', 'success');
+        
+        // Reset button after 3 seconds
+        setTimeout(() => {
+          button.innerHTML = originalText;
+          button.style.background = '';
+        }, 3000);
+      }).catch(err => {
+        console.error('Erro ao copiar:', err);
+        showNotification('❌ Erro ao copiar código. Tente novamente.', 'error');
+      });
+    }
+    
+    // Notification system
+    function showNotification(message, type = 'info') {
+      // Remove existing notification
+      const existing = document.querySelector('.notification-toast');
+      if (existing) {
+        existing.remove();
+      }
+      
+      // Create notification
+      const notification = document.createElement('div');
+      notification.className = `notification-toast notification-${type}`;
+      notification.textContent = message;
+      
+      // Add styles
+      const colors = {
+        success: { bg: '#10b981', border: '#059669' },
+        error: { bg: '#ef4444', border: '#dc2626' },
+        warning: { bg: '#f59e0b', border: '#d97706' },
+        info: { bg: '#3b82f6', border: '#2563eb' }
+      };
+      
+      const color = colors[type] || colors.info;
+      
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${color.bg};
+        color: white;
+        padding: 16px 24px;
+        border-radius: 12px;
+        border-left: 4px solid ${color.border};
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        font-size: 14px;
+        font-weight: 600;
+        z-index: 10000;
+        animation: slideInRight 0.3s ease-out;
+        max-width: 90%;
+      `;
+      
+      document.body.appendChild(notification);
+      
+      // Auto remove after 4 seconds
+      setTimeout(() => {
+        notification.style.animation = 'slideOutRight 0.3s ease-out';
+        setTimeout(() => notification.remove(), 300);
+      }, 4000);
+    }
+    
+    // Add animation styles
+    const notificationStyle = document.createElement('style');
+    notificationStyle.textContent = `
+      @keyframes slideInRight {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes slideOutRight {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+      }
+    `;
+    document.head.appendChild(notificationStyle);
+
+    // Download QR Code function
+    function downloadQR() {
+      const svg = document.querySelector('#qr-code svg');
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      canvas.width = 400;
+      canvas.height = 400;
+      
+      img.onload = function() {
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        canvas.toBlob(function(blob) {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'qrcode-pix.png';
+          a.click();
+          URL.revokeObjectURL(url);
+        });
+      };
+      
+      img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+    }
+
+    // Admin can update these values
+    window.updatePaymentInfo = function(qrCodeUrl, pixCode) {
+      if (qrCodeUrl) {
+        document.getElementById('qr-code').innerHTML = '<img src="' + qrCodeUrl + '" alt="QR Code PIX" />';
+      }
+      if (pixCode) {
+        document.getElementById('pix-code').textContent = pixCode;
+      }
+    };
+
+    // Show payment done button after 4 minutes (240 seconds)
+    setTimeout(() => {
+      document.getElementById('btn-payment-done').classList.add('show');
+    }, 240000); // 4 minutes = 240000 milliseconds
+
+    // Redirect to confirmation page
+    window.CONFIRMATION_PAGE_URL = 'confirmacao.html'; // Default URL
+
+    function goToConfirmation() {
+      // Get total and quantity from URL params
+      const urlParams = new URLSearchParams(window.location.search);
+      const total = urlParams.get('total') || 'R$ 0,00';
+      const qty = urlParams.get('qty') || '1';
+      
+      // Redirect with parameters
+      window.location.href = `${window.CONFIRMATION_PAGE_URL}?total=${encodeURIComponent(total)}&qty=${qty}`;
+    }
+
+    // Admin can set custom confirmation page URL
+    window.setConfirmationUrl = function(url) {
+      window.CONFIRMATION_PAGE_URL = url;
+    };
+
+  </script>
+  
+  <!-- Payment Gateway Integration -->
+  <script src="js/payment-gateway.js"></script>
+</body>
+</html>

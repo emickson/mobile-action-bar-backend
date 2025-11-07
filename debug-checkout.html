@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Debug - Checkout</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+      background: #1a1a1a;
+      color: #00ff00;
+    }
+    .log {
+      background: #000;
+      padding: 10px;
+      margin: 5px 0;
+      border-left: 3px solid #00ff00;
+      border-radius: 4px;
+    }
+    .error {
+      border-left-color: #ff0000;
+      color: #ff0000;
+    }
+    .success {
+      border-left-color: #00ff00;
+      color: #00ff00;
+    }
+    .warning {
+      border-left-color: #ffaa00;
+      color: #ffaa00;
+    }
+    button {
+      background: #00ff00;
+      color: #000;
+      border: none;
+      padding: 15px 30px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 8px;
+      margin: 10px 5px;
+    }
+    button:hover {
+      background: #00cc00;
+    }
+    button:disabled {
+      background: #666;
+      cursor: not-allowed;
+    }
+    #logs {
+      max-height: 500px;
+      overflow-y: auto;
+      margin-top: 20px;
+    }
+    .config-box {
+      background: #2a2a2a;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>🐛 Debug - Checkout Flow</h1>
+  
+  <div class="config-box">
+    <h3>Status do Sistema:</h3>
+    <div id="status"></div>
+  </div>
+
+  <button onclick="checkConfig()">1. Verificar Configuração</button>
+  <button onclick="testGateway()">2. Testar Gateway</button>
+  <button onclick="simulateCheckout()">3. Simular Checkout</button>
+  <button onclick="clearLogs()">Limpar Logs</button>
+
+  <div id="logs"></div>
+
+  <script src="js/payment-gateway.js"></script>
+  <script>
+    const logsDiv = document.getElementById('logs');
+    const statusDiv = document.getElementById('status');
+
+    function addLog(message, type = 'log') {
+      const logEl = document.createElement('div');
+      logEl.className = `log ${type}`;
+      logEl.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      logsDiv.insertBefore(logEl, logsDiv.firstChild);
+      console.log(message);
+    }
+
+    function clearLogs() {
+      logsDiv.innerHTML = '';
+      addLog('Logs limpos', 'success');
+    }
+
+    function checkConfig() {
+      addLog('🔍 Verificando configuração...', 'log');
+      
+      // Verificar gateway_config
+      const gatewayConfig = localStorage.getItem('gateway_config');
+      if (!gatewayConfig) {
+        addLog('❌ Gateway não configurado!', 'error');
+        addLog('💡 Vá em admin.html → Gateway Vegas → Configure API Key', 'warning');
+        return;
+      }
+      
+      const config = JSON.parse(gatewayConfig);
+      addLog('✅ Gateway configurado: ' + config.provider, 'success');
+      addLog('📍 Base URL: ' + config.baseUrl, 'log');
+      addLog('🔑 API Key: ' + (config.apiKey ? '***' + config.apiKey.slice(-4) : 'NÃO DEFINIDA'), 'log');
+      
+      // Verificar product_data
+      const productData = localStorage.getItem('product_data');
+      if (!productData) {
+        addLog('⚠️ Produto não configurado', 'warning');
+      } else {
+        const product = JSON.parse(productData);
+        addLog('✅ Produto: ' + product.name, 'success');
+      }
+      
+      // Verificar PaymentGateway
+      if (typeof PaymentGateway === 'undefined') {
+        addLog('❌ PaymentGateway não carregado!', 'error');
+        addLog('💡 Verifique se js/payment-gateway.js existe', 'warning');
+      } else {
+        addLog('✅ PaymentGateway carregado', 'success');
+      }
+      
+      updateStatus();
+    }
+
+    function updateStatus() {
+      const gatewayConfig = localStorage.getItem('gateway_config');
+      const productData = localStorage.getItem('product_data');
+      const hasGateway = typeof PaymentGateway !== 'undefined';
+      
+      let html = '<ul style="margin:0;padding-left:20px;">';
+      html += `<li>Gateway: ${gatewayConfig ? '✅ Configurado' : '❌ Não configurado'}</li>`;
+      html += `<li>Produto: ${productData ? '✅ Configurado' : '⚠️ Não configurado'}</li>`;
+      html += `<li>Módulo: ${hasGateway ? '✅ Carregado' : '❌ Não carregado'}</li>`;
+      html += '</ul>';
+      
+      statusDiv.innerHTML = html;
+    }
+
+    async function testGateway() {
+      addLog('🧪 Testando Gateway...', 'log');
+      
+      try {
+        const gateway = new PaymentGateway();
+        addLog('✅ Gateway instanciado', 'success');
+        
+        if (!gateway.config) {
+          addLog('❌ Config não carregada', 'error');
+          return;
+        }
+        
+        addLog('✅ Config: ' + gateway.config.provider, 'success');
+        addLog('✅ Base URL: ' + gateway.baseURL, 'success');
+        
+      } catch (error) {
+        addLog('❌ Erro ao testar gateway: ' + error.message, 'error');
+      }
+    }
+
+    async function simulateCheckout() {
+      addLog('🚀 Simulando checkout completo...', 'log');
+      
+      const btn = event.target;
+      btn.disabled = true;
+      btn.textContent = 'Processando...';
+      
+      try {
+        // 1. Verificar config
+        addLog('1️⃣ Verificando configuração...', 'log');
+        const gatewayConfig = localStorage.getItem('gateway_config');
+        if (!gatewayConfig) {
+          throw new Error('Gateway não configurado');
+        }
+        addLog('✅ Config OK', 'success');
+        
+        // 2. Instanciar gateway
+        addLog('2️⃣ Instanciando gateway...', 'log');
+        const gateway = new PaymentGateway();
+        addLog('✅ Gateway instanciado', 'success');
+        
+        // 3. Preparar dados
+        addLog('3️⃣ Preparando dados de teste...', 'log');
+        const productData = JSON.parse(localStorage.getItem('product_data') || '{"name":"Produto Teste","price":100}');
+        
+        const paymentData = {
+          amount: 100,
+          freight: 0,
+          discount: 0,
+          description: 'Pedido Teste',
+          orderId: 'TEST' + Date.now(),
+          customer: {
+            name: 'Teste Silva',
+            email: 'teste@teste.com',
+            phone: '+5511999999999',
+            document: '00000000000',
+            address: {
+              zipcode: '01310000',
+              street: 'Av Paulista',
+              number: '1000',
+              complement: '',
+              district: 'Bela Vista',
+              city: 'São Paulo',
+              state: 'SP'
+            }
+          },
+          products: [{
+            name: productData.name || 'Produto Teste',
+            price: 10000,
+            quantity: 1,
+            code: 'TEST001',
+            is_digital: false,
+            description: 'Teste',
+            image_url: ''
+          }]
+        };
+        addLog('✅ Dados preparados', 'success');
+        
+        // 4. Gerar PIX
+        addLog('4️⃣ Gerando PIX via API...', 'log');
+        addLog('⏳ Aguarde... (pode demorar devido ao CORS)', 'warning');
+        
+        const pixData = await gateway.generatePIX(paymentData);
+        
+        addLog('✅ PIX GERADO COM SUCESSO!', 'success');
+        addLog('📋 Transaction ID: ' + pixData.transactionId, 'success');
+        addLog('💳 PIX Code: ' + (pixData.pixCode ? pixData.pixCode.substring(0, 50) + '...' : 'N/A'), 'success');
+        addLog('🖼️ QR Code: ' + (pixData.qrcodeUrl ? 'Disponível' : 'N/A'), 'success');
+        
+        // 5. Salvar
+        addLog('5️⃣ Salvando dados...', 'log');
+        localStorage.setItem('current_payment', JSON.stringify(pixData));
+        addLog('✅ Dados salvos', 'success');
+        
+        // 6. Simular redirecionamento
+        addLog('6️⃣ Pronto para redirecionar!', 'success');
+        addLog('🔀 URL: pagamento.html?txid=' + pixData.transactionId, 'log');
+        
+        // Perguntar se quer redirecionar
+        if (confirm('✅ Teste concluído com sucesso!\n\nDeseja ir para a página de pagamento?')) {
+          window.location.href = 'pagamento.html?total=R$ 100,00&shipping=Grátis&qty=1&txid=' + pixData.transactionId;
+        }
+        
+      } catch (error) {
+        addLog('❌ ERRO: ' + error.message, 'error');
+        addLog('📝 Stack: ' + error.stack, 'error');
+        
+        if (error.message.includes('Failed to fetch')) {
+          addLog('💡 Isso é esperado em localhost (CORS)', 'warning');
+          addLog('💡 Funciona em produção (compratlktok.shop)', 'warning');
+        }
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '3. Simular Checkout';
+      }
+    }
+
+    // Verificar ao carregar
+    window.onload = () => {
+      addLog('🚀 Debug iniciado', 'success');
+      updateStatus();
+    };
+  </script>
+</body>
+</html>

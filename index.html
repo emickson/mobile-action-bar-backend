@@ -1,0 +1,869 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Produto - Barra de Ações</title>
+  <style>
+    :root {
+      --radius: 9999px;
+      --gap: 10px;
+      --gray: #f1f2f4;
+      --gray-text: #1f2328;
+      --pink: #ff2d55;
+      --pink-dark: #e02649;
+      --shadow: 0 2px 6px rgba(0,0,0,.06);
+    }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; color: #111; background: #f3f4f6; overflow-x: hidden; }
+    .app {
+      width: 100%;
+      max-width: 420px;
+      margin: 0 auto;
+      background: #fff;
+      min-height: 100dvh;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top bar */
+    .header { display:flex; align-items:center; justify-content:space-between; padding: 10px 12px; }
+    .header-left, .header-right { display:flex; align-items:center; gap: 14px; }
+    .top-btn { display:grid; place-items:center; width: 36px; height: 36px; background: transparent; border: 0; color: #111; border-radius: 8px; }
+    .top-btn:active { transform: scale(0.98); }
+    .top-icon { width: 20px; height: 20px; }
+
+    /* Imagem do produto (mock) */
+    .product {
+      display: grid;
+      gap: 12px;
+      padding: 0 12px 80px; /* espaço para a barra fixa */
+    }
+    .product .image {
+      width: 100%;
+      aspect-ratio: 1/1;
+      background: #f6f7f9;
+      border-radius: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+    .product .image img { width:100%; height:100%; object-fit: cover; border-radius: 14px; display:block; }
+    
+    /* Carousel */
+    .carousel { position: relative; width: 100%; height: 100%; }
+    .carousel-track { display: flex; transition: transform 0.3s ease; height: 100%; touch-action: pan-y; cursor: grab; user-select: none; }
+    .carousel-track:active { cursor: grabbing; }
+    .carousel-slide { min-width: 100%; height: 100%; }
+    .carousel-slide img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+    .carousel-indicators { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 10; }
+    .carousel-indicator { width: 6px; height: 6px; background: rgba(255,255,255,0.5); border-radius: 50%; cursor: pointer; transition: all 0.2s; }
+    .carousel-indicator.active { width: 20px; border-radius: 3px; background: rgba(255,255,255,0.9); }
+    .price-row { display:flex; align-items:center; gap: 8px; padding: 0 2px; }
+    .tag { background:#ff5a7a; color:#fff; font-weight:700; border-radius:8px; padding: 4px 8px; font-size:12px; }
+    .price { color:#ff2d55; font-weight:800; font-size: 26px; }
+    .old { color:#9aa1a9; text-decoration: line-through; }
+
+    /* Info linhas */
+    .info-row { display:flex; align-items:center; gap:8px; color:#6b7280; font-size:14px; padding: 0 2px; }
+    .bullet { width:4px; height:4px; background:#e5e7eb; border-radius:50%; }
+    .title { font-weight: 800; color: var(--gray-text); font-size: 16px; line-height: 1.3; margin: 8px 2px 0; }
+    .title-row { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .save-btn { display:grid; place-items:center; width: 32px; height: 32px; background: #fff; border: 1px solid #e7e9ec; border-radius: 8px; color:#111; }
+    .save-btn:active { transform: scale(0.98); }
+    .save-icon { width: 18px; height: 18px; }
+    .rating { color:#f59e0b; font-weight:700; }
+    .sold { color:#6b7280; }
+
+    .divider { height:1px; background:#eef0f3; margin: 1px 2px; border:0; }
+    .chev { width:16px; height:16px; color:#9aa1a9; flex: 0 0 auto; }
+    .promo-row { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+
+    /* Frete card */
+    .ship-card { margin-top:1px; background:#fff; border:1px solid #eef0f3; border-radius:12px; padding:10px 12px; }
+    .ship-row { display:flex; align-items:center; gap:10px; }
+    .ship-left { display:flex; align-items:center; gap:8px; color: var(--gray-text); font-size:14px; }
+    .truck { width:18px; height:18px; color:#6b7280; }
+    .ship-fee { color:#6b7280; font-size:13px; display:flex; align-items:center; }
+    .ship-fee .old { color:#9aa1a9; margin-right:6px; }
+    .ship-discount { color:#10b981; font-weight:700; font-size:13px; margin-top:6px; }
+
+    /* Proteção do cliente */
+    .protect-card { margin-top:1px; background:#fff7e6; border:1px solid #fde7bf; border-radius:12px; padding:12px; color:#7a5a2e; cursor: pointer; }
+    .protect-card:active { transform: scale(0.995); background:#fff3d9; }
+    .protect-head { display:flex; align-items:center; justify-content:space-between; gap:8px; font-weight:800; }
+    .protect-left { display:flex; align-items:center; gap:8px; }
+    .shield { width:20px; height:20px; color:#b8860b; fill:#b8860b; }
+    .protect-list { display:grid; grid-template-columns: 1fr 1fr; gap:6px 16px; margin-top:8px; font-size:14px; }
+    .protect-item { display:flex; align-items:center; gap:8px; color:#111; }
+    .check { width:16px; height:16px; color:#b37b2e; }
+
+    /* Avaliações */
+    .reviews { margin-top:16px; }
+    .reviews-header { display:flex; align-items:center; justify-content:space-between; padding:0 2px; margin-bottom:12px; }
+    .reviews-title { font-weight:800; font-size:16px; color:var(--gray-text); }
+    .reviews-count { color:#6b7280; font-weight:400; }
+    .reviews-more { color:#6b7280; font-size:14px; text-decoration:none; display:flex; align-items:center; gap:4px; }
+    .reviews-avg { display:flex; align-items:center; gap:8px; padding:0 2px; margin-bottom:16px; font-size:20px; font-weight:800; }
+    .reviews-stars { color:#f59e0b; font-size:16px; }
+    .review-card { background:#fff; border:1px solid #eef0f3; border-radius:12px; padding:12px; margin-bottom:12px; }
+    .review-user { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+    .review-avatar { width:32px; height:32px; border-radius:50%; background:#e5e7eb; object-fit:cover; }
+    .review-name { font-weight:700; font-size:14px; color:var(--gray-text); }
+    .review-rating { color:#f59e0b; font-size:14px; margin-bottom:6px; }
+    .review-item { color:#6b7280; font-size:13px; margin-bottom:8px; }
+    .review-text { color:var(--gray-text); font-size:14px; line-height:1.4; margin-bottom:10px; }
+    .review-photos { display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; }
+    .review-photos::-webkit-scrollbar { display:none; }
+    .review-photo { width:80px; height:80px; border-radius:8px; object-fit:cover; background:#f6f7f9; flex:0 0 auto; cursor:pointer; }
+    
+    /* Lightbox para fotos */
+    .lightbox { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:9999; align-items:center; justify-content:center; }
+    .lightbox.active { display:flex; }
+    .lightbox-img { max-width:90%; max-height:90%; object-fit:contain; }
+    .lightbox-close { position:absolute; top:20px; right:20px; width:40px; height:40px; background:rgba(255,255,255,0.2); border:0; border-radius:50%; color:#fff; font-size:24px; cursor:pointer; }
+    .lightbox-nav { position:absolute; top:50%; transform:translateY(-50%); width:40px; height:40px; background:rgba(255,255,255,0.2); border:0; border-radius:50%; color:#fff; font-size:20px; cursor:pointer; }
+    .lightbox-prev { left:20px; }
+    .lightbox-next { right:20px; }
+
+    /* Estatísticas de avaliações */
+    .reviews-stats { margin-top:12px; padding:12px 2px; border-top:1px solid #eef0f3; border-bottom:1px solid #eef0f3; display:flex; align-items:center; justify-content:space-between; }
+    .reviews-stats-left { display:flex; align-items:center; gap:16px; flex:1; overflow-x:auto; scrollbar-width:none; }
+    .reviews-stats-left::-webkit-scrollbar { display:none; }
+    .reviews-stat { display:flex; align-items:center; gap:6px; font-size:13px; color:var(--gray-text); white-space:nowrap; }
+    .reviews-stat-icon { width:16px; height:16px; color:#6b7280; }
+    .reviews-stat-star { color:#f59e0b; font-size:14px; }
+    .reviews-stat-count { color:#6b7280; }
+    .reviews-stats-arrow { width:20px; height:20px; color:#9aa1a9; flex:0 0 auto; }
+
+    /* Seção da loja */
+    .store-section { margin-top:16px; background:#fff; border:1px solid #eef0f3; border-radius:12px; padding:14px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .store-info { display:flex; align-items:center; gap:12px; flex:1; }
+    .store-logo { width:48px; height:48px; border-radius:8px; object-fit:cover; background:#f6f7f9; flex:0 0 auto; }
+    .store-details { flex:1; }
+    .store-name { font-weight:700; font-size:15px; color:var(--gray-text); margin-bottom:2px; }
+    .store-sales { color:#6b7280; font-size:13px; }
+    .store-visit-btn { padding:8px 16px; background:#fff; border:1px solid #e7e9ec; border-radius:8px; color:var(--gray-text); font-weight:600; font-size:14px; cursor:pointer; white-space:nowrap; }
+    .store-visit-btn:active { background:#f9fafb; }
+
+    /* Descrição do produto */
+    .description-section { margin-top:16px; }
+    .description-title { font-weight:800; font-size:16px; color:var(--gray-text); margin-bottom:12px; padding:0 2px; }
+    .description-content { color:var(--gray-text); font-size:14px; line-height:1.6; white-space:pre-wrap; padding:0 2px; }
+
+    /* Barra fixa inferior com botões */
+    .bar-wrap {
+      position: fixed;
+      left: 50%;
+      right: auto;
+      bottom: 0;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 420px;
+      background: #fff;
+      border-top: 1px solid #eef0f3;
+      padding: 8px 8px calc(env(safe-area-inset-bottom) + 8px);
+    }
+    .bar {
+      display: flex;
+      align-items: center;
+      gap: var(--gap);
+      background: #fff;
+      padding: 6px;
+      border-radius: 14px;
+
+      /* Mantém lado a lado e permite rolar no mobile */
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;             /* Firefox */
+    }
+    .bar::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+    .icon-btn { flex: 0 0 auto; }
+
+    /* Ícones com rótulo abaixo */
+    .icon-stack { display: grid; justify-items: center; gap: 6px; margin-right: 4px; }
+    .icon-label { font-size: 11px; color: #6b7280; line-height: 1; }
+
+    /* Botão de ícone */
+    .icon-btn {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: #fff;
+      border: 1px solid #e7e9ec;
+      box-shadow: none;
+      cursor: pointer;
+      transition: transform .08s ease, background .2s ease, border-color .2s ease;
+    }
+    .icon-btn:hover { transform: translateY(-1px); background: #fafbfc; border-color: #d8dde3; }
+    .icon { width: 22px; height: 22px; color: #6b7280; }
+
+    /* Botões principais */
+    .btn {
+      height: 52px;
+      padding: 0 16px;
+      border: 0;
+      border-radius: var(--radius);
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: none;
+      transition: transform .08s ease, filter .15s ease, background .2s ease, color .2s ease;
+      white-space: nowrap;
+      flex: 1 1 0;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .btn--ghost { background: #fff; color: var(--gray-text); border: 2px solid #e7e9ec; border-radius: 12px; font-weight: 600; white-space: normal; }
+    .btn--ghost:hover { background: rgba(0,0,0,0.04); filter: none; }
+    .btn--primary { background: #FF1744; color: #fff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,.12); white-space: normal; }
+    .btn--primary:hover { background: #E91E3A; }
+
+    /* Ajustes para telas pequenas */
+    @media (max-width: 420px) {
+      .bar-wrap { padding: 6px 6px calc(env(safe-area-inset-bottom) + 6px); }
+      .bar { gap: 4px; padding: 4px; overflow-x: hidden; }
+      .icon-btn { width: 34px; height: 34px; border-radius: 10px; }
+      .icon { width: 18px; height: 18px; }
+      .icon-label { font-size: 10.5px; }
+      .btn { height: 44px; padding: 0 10px; font-size: 13px; }
+      .btn--ghost { font-size: 13px; line-height: 1.1; }
+      .btn--primary { font-size: 13px; line-height: 1.1; }
+      .btn--ghost { flex: 1.1 1 0; }
+      .btn--primary { flex: 0.9 1 0; }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="app">
+  <header class="header">
+    <div class="header-left">
+      <button class="top-btn" aria-label="Fechar">
+        <svg class="top-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
+    <div class="header-right">
+      <button class="top-btn" aria-label="Compartilhar">
+        <svg class="top-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/>
+          <path d="M16 6l-4-4-4 4"/>
+          <path d="M12 2v14"/>
+        </svg>
+      </button>
+      <button class="top-btn" aria-label="Carrinho">
+        <svg class="top-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="9" cy="21" r="1"/>
+          <circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 12.39a2 2 0 0 0 2 1.61h7.72a2 2 0 0 0 2-1.61L23 6H6"/>
+        </svg>
+      </button>
+      <button class="top-btn" aria-label="Mais opções">
+        <svg class="top-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <circle cx="5" cy="12" r="1.8"/>
+          <circle cx="12" cy="12" r="1.8"/>
+          <circle cx="19" cy="12" r="1.8"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="product">
+    <div class="image" aria-label="Imagem do produto">
+      <div class="carousel" id="product-carousel">
+        <div class="carousel-track" id="carousel-track"></div>
+        <div class="carousel-indicators" id="carousel-indicators"></div>
+      </div>
+    </div>
+    <div class="price-row">
+      <span class="tag" id="discount-badge">-45%</span>
+      <span class="price">R$ 10,99</span>
+      <span class="old">R$ 19,99</span>
+    </div>
+    <div class="promo-row">
+      <div id="promo-text" style="background:#fff0f3; color:#e02649; padding:10px 12px; border-radius:12px; font-size:14px;">
+        Desconto de 10%, máximo de R$ 25
+      </div>
+      <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+    </div>
+
+    <div class="title-row">
+      <h1 class="title">Patinete Elétrico Scooter Para Adultos 350W Capacidade de Carga de 150KG</h1>
+      <button class="save-btn" aria-label="Salvar produto">
+        <svg class="save-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
+        </svg>
+      </button>
+    </div>
+    <div class="info-row" aria-label="Avaliação e vendidos">
+      <span class="rating">★ 4.2</span>
+      <span style="color:#9aa1a9;">(20)</span>
+      <span class="bullet"></span>
+      <span class="sold">88 vendidos</span>
+    </div>
+
+    <hr class="divider" />
+
+    <div class="ship-card" aria-label="Informações de frete">
+      <div class="ship-row">
+        <div class="ship-left">
+          <span>Receba até <strong id="delivery-window"></strong></span>
+        </div>
+      </div>
+      <div class="ship-fee" aria-label="Taxa de envio">
+        <svg class="truck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;">
+          <path d="M10 17h4V5H2v12h2"/>
+          <path d="M14 7h5l3 4v6h-4"/>
+          <circle cx="7" cy="17" r="2"/>
+          <circle cx="17" cy="17" r="2"/>
+        </svg>
+        <span style="color:#6b7280;">Taxa de envio:</span> <span id="ship-fee-old" class="old">R$ 33,40</span><span id="ship-fee-new">R$ 13,40</span>
+      </div>
+      <div class="ship-discount">Desconto de R$ 20 no frete em pedidos acima de R$ 29</div>
+    </div>
+
+    <div class="protect-card" aria-label="Proteção do cliente" role="button" tabindex="0">
+      <div class="protect-head">
+        <div class="protect-left">
+          <svg class="shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>
+          </svg>
+          <span>Proteção do cliente</span>
+        </div>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="protect-list">
+        <div class="protect-item"><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Devolução gratuita</div>
+        <div class="protect-item"><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Reembolso automático por danos</div>
+        <div class="protect-item"><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Pagamento seguro</div>
+        <div class="protect-item"><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Cupom por atraso na coleta</div>
+      </div>
+    </div>
+
+    <section class="reviews" id="reviews-section">
+      <div class="reviews-header">
+        <div>
+          <span class="reviews-title">Avaliações dos clientes</span>
+          <span class="reviews-count" id="reviews-count">(0)</span>
+        </div>
+        <span class="reviews-more">Ver mais <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18l6-6-6-6"/></svg></span>
+      </div>
+      <div class="reviews-avg">
+        <span id="reviews-avg-score">0</span>
+        <span class="reviews-stars" id="reviews-avg-stars">☆☆☆☆☆</span>
+      </div>
+      <div id="reviews-list">
+        <!-- Reviews will be populated by admin panel -->
+      </div>
+
+      <div class="reviews-stats">
+        <div class="reviews-stats-left">
+          <div class="reviews-stat">
+            <svg class="reviews-stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <path d="M21 15l-5-5L5 21"/>
+            </svg>
+            <span>inclui imagens ou vídeos <span class="reviews-stat-count">(617)</span></span>
+          </div>
+          <div class="reviews-stat">
+            <span class="reviews-stat-star">5 ★</span>
+            <span class="reviews-stat-count">(2,4 mil)</span>
+          </div>
+          <div class="reviews-stat">
+            <span class="reviews-stat-star">4 ★</span>
+            <span class="reviews-stat-count">(1K)</span>
+          </div>
+        </div>
+        <svg class="reviews-stats-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18l6-6-6-6"/>
+        </svg>
+      </div>
+    </section>
+
+    <section class="store-section" id="store-section">
+      <div class="store-info">
+        <img class="store-logo" id="store-logo" src="" alt="Logo da loja" />
+        <div class="store-details">
+          <div class="store-name" id="store-name">Beifou shop</div>
+          <div class="store-sales" id="store-sales">16,9K vendido(s)</div>
+        </div>
+      </div>
+      <button class="store-visit-btn">Visitar</button>
+    </section>
+
+    <section class="description-section" id="description-section">
+      <h2 class="description-title">Sobre este produto</h2>
+      <div class="description-content" id="description-content">
+Bem-vindo à loja AUXOM, siga a loja para obter mais cupons
+Se você tiver alguma dúvida sobre o produto, por favor deixe UMA Mensagem para o cliente e nós responderemos a tempo!
+Empresas brasileiras locais, transporte rápido!
+
+🚚 Destaques:
+
+Potente Motor de 350W: Equipado com um motor de 350W, oferece aceleração rápida e uma condução suave e eficiente para o dia a dia.
+
+Autonomia de até 28KM: Com uma única carga, o patinete pode percorrer até 28KM, perfeito para deslocamentos sem a necessidade de recarga constante.
+
+Velocidade Máxima de 30KM/H: Atinge uma velocidade de até 30KM/H, permitindo viagens rápidas e eficiente.
+
+Capacidade de Carga de 150KG: Suporta até 150KG.
+      </div>
+    </section>
+  </main>
+
+  <nav class="bar-wrap" aria-label="Ações do produto">
+    <div class="bar">
+      <div class="icon-stack">
+        <button class="icon-btn" aria-label="Loja">
+          <!-- ícone loja (sacola) -->
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 2h12l1 5H5l1-5Z" />
+            <path d="M4 7h16l-1 13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 7Z" />
+            <path d="M9 11v-1a3 3 0 0 1 6 0v1" />
+          </svg>
+        </button>
+        <div class="icon-label">Loja</div>
+      </div>
+
+      <div class="icon-stack">
+        <button class="icon-btn" aria-label="Chat">
+          <!-- ícone chat -->
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z" />
+          </svg>
+        </button>
+        <div class="icon-label">Chat</div>
+      </div>
+
+      <button class="btn btn--ghost" aria-label="Adicionar ao carrinho">Adicionar<br>ao carrinho</button>
+      <button class="btn btn--primary" aria-label="Comprar com cupom" onclick="window.location.href='checkout-v2.html'">Comprar<br>com cupom</button>
+    </div>
+  </nav>
+  </div>
+
+  <!-- Lightbox para ampliar fotos -->
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox-close" id="lightbox-close">&times;</button>
+    <button class="lightbox-nav lightbox-prev" id="lightbox-prev">‹</button>
+    <img class="lightbox-img" id="lightbox-img" src="" alt="Foto ampliada" />
+    <button class="lightbox-nav lightbox-next" id="lightbox-next">›</button>
+  </div>
+
+  <script>
+    (function(){
+      // Load shipping data from admin or use defaults
+      const productData = localStorage.getItem('product_data');
+      let shippingData = { daysMin: 2, daysMax: 6, oldFee: 33.40, newFee: 13.40, discountText: 'Desconto de R$ 20 no frete em pedidos acima de R$ 29' };
+      
+      if (productData) {
+        const data = JSON.parse(productData);
+        if (data.shipping) {
+          shippingData = data.shipping;
+        }
+      }
+
+      const daysMin = shippingData.daysMin;
+      const daysMax = shippingData.daysMax;
+      const oldFee = shippingData.oldFee;
+      const newFee = shippingData.newFee;
+
+      function addDays(base, n){ const d = new Date(base); d.setDate(d.getDate()+n); return d; }
+      const months = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+      function fmtBR(d){ return `${d.getDate()} de ${months[d.getMonth()]}`; }
+
+      const today = new Date();
+      const start = addDays(today, daysMin);
+      const end = addDays(today, daysMax);
+
+      const winEl = document.getElementById('delivery-window');
+      if (winEl) winEl.textContent = `${fmtBR(start)} - ${fmtBR(end)}`;
+
+      function brMoney(n){ return `R$ ${n.toFixed(2).replace('.', ',')}`; }
+      const oldEl = document.getElementById('ship-fee-old');
+      const newEl = document.getElementById('ship-fee-new');
+      const discountEl = document.querySelector('.ship-discount');
+      if (oldEl) oldEl.textContent = brMoney(oldFee);
+      if (newEl) newEl.textContent = brMoney(newFee);
+      if (discountEl && shippingData.discountText) discountEl.textContent = shippingData.discountText;
+      // Set main product image if URL is provided
+      var URL_IMG = window.PRODUCT_IMAGE_URL || '';
+      if (URL_IMG) {
+        var img = document.getElementById('product-photo');
+        if (img) img.src = URL_IMG;
+      }
+
+      // Render reviews from admin panel data only
+      function renderReviews() {
+        var reviews = window.PRODUCT_REVIEWS || [];
+        var listEl = document.getElementById('reviews-list');
+        var countEl = document.getElementById('reviews-count');
+        var avgScoreEl = document.getElementById('reviews-avg-score');
+        var avgStarsEl = document.getElementById('reviews-avg-stars');
+
+        // Use custom reviews count display from admin (default: 3)
+        var displayCount = localStorage.getItem('reviews_count_display') || '3';
+        countEl.textContent = '(' + displayCount + ')';
+
+        if (!reviews.length) return;
+        
+        // Calculate average
+        var total = reviews.reduce(function(sum, r){ return sum + r.rating; }, 0);
+        var avg = (total / reviews.length).toFixed(1);
+        avgScoreEl.textContent = avg;
+        avgStarsEl.textContent = '★'.repeat(Math.round(avg)) + '☆'.repeat(5 - Math.round(avg));
+
+        // Render review cards
+        reviews.forEach(function(review){
+          var card = document.createElement('div');
+          card.className = 'review-card';
+          
+          var userDiv = '<div class="review-user">';
+          userDiv += '<img class="review-avatar" src="' + (review.avatar || '') + '" alt="' + review.name + '" />';
+          userDiv += '<span class="review-name">' + review.name + '</span></div>';
+          
+          var stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+          var ratingDiv = '<div class="review-rating">' + stars + '</div>';
+          var itemDiv = '<div class="review-item">Item: ' + (review.item || 'Padrão') + '</div>';
+          var textDiv = '<div class="review-text">' + review.text + '</div>';
+          
+          var photosDiv = '';
+          if (review.photos && review.photos.length) {
+            photosDiv = '<div class="review-photos">';
+            review.photos.forEach(function(photo, idx){
+              photosDiv += '<img class="review-photo" src="' + photo + '" alt="Foto da avaliação" data-photos=\'' + JSON.stringify(review.photos) + '\' data-index="' + idx + '" />';
+            });
+            photosDiv += '</div>';
+          }
+          
+          card.innerHTML = userDiv + ratingDiv + itemDiv + textDiv + photosDiv;
+          listEl.appendChild(card);
+        });
+      }
+      renderReviews();
+
+      // Lightbox functionality
+      var lightbox = document.getElementById('lightbox');
+      var lightboxImg = document.getElementById('lightbox-img');
+      var lightboxClose = document.getElementById('lightbox-close');
+      var lightboxPrev = document.getElementById('lightbox-prev');
+      var lightboxNext = document.getElementById('lightbox-next');
+      var currentPhotos = [];
+      var currentIndex = 0;
+
+      function openLightbox(photos, index) {
+        currentPhotos = photos;
+        currentIndex = index;
+        lightboxImg.src = photos[index];
+        lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeLightbox() {
+        lightbox.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+
+      function showPrev() {
+        currentIndex = (currentIndex - 1 + currentPhotos.length) % currentPhotos.length;
+        lightboxImg.src = currentPhotos[currentIndex];
+      }
+
+      function showNext() {
+        currentIndex = (currentIndex + 1) % currentPhotos.length;
+        lightboxImg.src = currentPhotos[currentIndex];
+      }
+
+      lightboxClose.addEventListener('click', closeLightbox);
+      lightboxPrev.addEventListener('click', showPrev);
+      lightboxNext.addEventListener('click', showNext);
+      lightbox.addEventListener('click', function(e) {
+        if (e.target === lightbox) closeLightbox();
+      });
+
+      // Attach click handlers to review photos
+      document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('review-photo')) {
+          var photos = JSON.parse(e.target.getAttribute('data-photos'));
+          var index = parseInt(e.target.getAttribute('data-index'));
+          openLightbox(photos, index);
+        }
+      });
+
+      // Render store info from admin panel
+      function renderStoreInfo() {
+        var store = window.STORE_INFO || {
+          name: 'Beifou shop',
+          logo: '',
+          sales: '16,9K'
+        };
+        
+        var nameEl = document.getElementById('store-name');
+        var logoEl = document.getElementById('store-logo');
+        var salesEl = document.getElementById('store-sales');
+        
+        if (nameEl) nameEl.textContent = store.name;
+        if (salesEl) salesEl.textContent = store.sales + ' vendido(s)';
+        if (logoEl && store.logo) logoEl.src = store.logo;
+      }
+      renderStoreInfo();
+
+      // Render product description from admin panel
+      function renderDescription() {
+        var description = localStorage.getItem('product_description') || window.PRODUCT_DESCRIPTION || null;
+        var contentEl = document.getElementById('description-content');
+        
+        if (description && contentEl) {
+          contentEl.textContent = description;
+        }
+      }
+      renderDescription();
+
+      // Carousel functionality
+      let currentSlide = 0;
+      let productImagesArray = [];
+
+      function initCarousel(images) {
+        productImagesArray = images;
+        const track = document.getElementById('carousel-track');
+        const indicators = document.getElementById('carousel-indicators');
+        
+        if (!images || images.length === 0) return;
+        
+        // Create slides
+        track.innerHTML = images.map(img => `
+          <div class="carousel-slide">
+            <img src="${img}" alt="Produto" />
+          </div>
+        `).join('');
+        
+        // Create indicators
+        if (images.length > 1) {
+          indicators.innerHTML = images.map((_, idx) => `
+            <div class="carousel-indicator ${idx === 0 ? 'active' : ''}" onclick="goToSlide(${idx})"></div>
+          `).join('');
+        }
+        
+        // Touch swipe support - improved
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let isDragging = false;
+        
+        track.addEventListener('touchstart', (e) => {
+          touchStartX = e.touches[0].clientX;
+          isDragging = true;
+        }, { passive: true });
+        
+        track.addEventListener('touchmove', (e) => {
+          if (!isDragging) return;
+          touchEndX = e.touches[0].clientX;
+        }, { passive: true });
+        
+        track.addEventListener('touchend', (e) => {
+          if (!isDragging) return;
+          isDragging = false;
+          
+          const diff = touchStartX - touchEndX;
+          
+          // Swipe left (next slide)
+          if (diff > 50 && currentSlide < productImagesArray.length - 1) {
+            changeSlide(1);
+          }
+          // Swipe right (previous slide)
+          else if (diff < -50 && currentSlide > 0) {
+            changeSlide(-1);
+          }
+          
+          touchStartX = 0;
+          touchEndX = 0;
+        }, { passive: true });
+        
+        // Mouse drag support (for desktop testing)
+        let mouseStartX = 0;
+        let mouseEndX = 0;
+        let isMouseDragging = false;
+        
+        track.addEventListener('mousedown', (e) => {
+          mouseStartX = e.clientX;
+          isMouseDragging = true;
+          track.style.cursor = 'grabbing';
+        });
+        
+        track.addEventListener('mousemove', (e) => {
+          if (!isMouseDragging) return;
+          mouseEndX = e.clientX;
+        });
+        
+        track.addEventListener('mouseup', (e) => {
+          if (!isMouseDragging) return;
+          isMouseDragging = false;
+          track.style.cursor = 'grab';
+          
+          const diff = mouseStartX - mouseEndX;
+          
+          // Drag left (next slide)
+          if (diff > 50 && currentSlide < productImagesArray.length - 1) {
+            changeSlide(1);
+          }
+          // Drag right (previous slide)
+          else if (diff < -50 && currentSlide > 0) {
+            changeSlide(-1);
+          }
+          
+          mouseStartX = 0;
+          mouseEndX = 0;
+        });
+        
+        track.addEventListener('mouseleave', () => {
+          if (isMouseDragging) {
+            isMouseDragging = false;
+            track.style.cursor = 'grab';
+          }
+        });
+      }
+
+      function changeSlide(direction) {
+        currentSlide += direction;
+        if (currentSlide < 0) currentSlide = productImagesArray.length - 1;
+        if (currentSlide >= productImagesArray.length) currentSlide = 0;
+        updateCarousel();
+      }
+
+      function goToSlide(index) {
+        currentSlide = index;
+        updateCarousel();
+      }
+
+      function updateCarousel() {
+        const track = document.getElementById('carousel-track');
+        const indicators = document.querySelectorAll('.carousel-indicator');
+        
+        track.style.transform = `translateX(-${currentSlide * 100}%)`;
+        
+        indicators.forEach((indicator, idx) => {
+          indicator.classList.toggle('active', idx === currentSlide);
+        });
+      }
+
+      // Load product data from admin
+      function loadProductData() {
+        // Get product ID from URL query parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('produto');
+        
+        console.log('🔍 Detectando produto da URL...');
+        console.log('   Query parameter "produto":', productId || 'NÃO ENCONTRADO');
+        
+        let productData;
+        
+        if (productId) {
+          // Try to find product in all_products array
+          const allProductsData = localStorage.getItem('all_products');
+          if (allProductsData) {
+            const allProducts = JSON.parse(allProductsData);
+            const product = allProducts.find(p => p.id == productId);
+            if (product) {
+              // Merge with current product_data to get images (not saved in list)
+              const currentData = localStorage.getItem('product_data');
+              if (currentData) {
+                const current = JSON.parse(currentData);
+                if (current.id == productId && current.images) {
+                  product.images = current.images;
+                }
+              }
+              productData = JSON.stringify(product);
+              console.log('✅ Produto encontrado na lista:', product.name);
+            } else {
+              console.warn('⚠️ Produto não encontrado na lista!');
+            }
+          }
+        }
+        
+        // Fallback to default product_data if not found
+        if (!productData) {
+          console.log('📄 Usando produto padrão...');
+          productData = localStorage.getItem('product_data');
+        }
+        
+        console.log('Loading product data:', productData ? 'ENCONTRADO' : 'AUSENTE'); // Debug
+        
+        if (productData) {
+          const data = JSON.parse(productData);
+          console.log('Parsed product data:', data); // Debug
+          
+          // Update product name
+          if (data.name) {
+            document.querySelector('.title').textContent = data.name;
+          }
+          
+          // Update prices
+          if (data.price) {
+            const priceFormatted = 'R$ ' + data.price.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            document.querySelector('.price').textContent = priceFormatted;
+          }
+          if (data.oldPrice) {
+            const oldPriceFormatted = 'R$ ' + data.oldPrice.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            document.querySelector('.price-row .old').textContent = oldPriceFormatted;
+          }
+          
+          // Update rating and sold
+          if (data.rating) {
+            document.querySelector('.rating').textContent = '★ ' + data.rating;
+          }
+          if (data.sold) {
+            document.querySelector('.sold').textContent = data.sold + ' vendidos';
+          }
+          
+          // Initialize carousel with images
+          if (data.images && data.images.length > 0) {
+            console.log('Loading images from array:', data.images.length, 'images'); // Debug
+            window.PRODUCT_IMAGE_URL = data.images[0];
+            initCarousel(data.images);
+          } else if (data.image) {
+            console.log('Loading single image:', data.image.substring(0, 50)); // Debug
+            window.PRODUCT_IMAGE_URL = data.image;
+            initCarousel([data.image]);
+          } else {
+            console.log('No images found in product data'); // Debug
+          }
+        } else {
+          console.log('No product data in localStorage'); // Debug
+        }
+      }
+      loadProductData();
+
+      // Load store data from admin
+      function loadStoreData() {
+        const storeData = localStorage.getItem('store_data');
+        if (storeData) {
+          const data = JSON.parse(storeData);
+          window.STORE_INFO = {
+            name: data.name || 'Beifou shop',
+            logo: data.logo || '',
+            sales: data.sales || '16,9K'
+          };
+          renderStoreInfo();
+        }
+      }
+      loadStoreData();
+
+      // Load reviews from admin
+      function loadReviewsFromAdmin() {
+        const reviewsData = localStorage.getItem('product_reviews');
+        if (reviewsData) {
+          window.PRODUCT_REVIEWS = JSON.parse(reviewsData);
+          renderReviews();
+        }
+      }
+      loadReviewsFromAdmin();
+    })();
+  </script>
+
+</body>
+</html>

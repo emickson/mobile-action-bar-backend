@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 40" width="200" height="40">
+  <!-- Logo amarelo e azul -->
+  <path fill="#FFD100" d="M8 12 L20 12 L28 20 L20 28 L8 28 L16 20 Z"/>
+  <path fill="#003D7A" d="M20 8 L32 8 L40 16 L32 24 L20 24 L28 16 Z"/>
+  <path fill="#0099CC" d="M32 12 L44 12 L52 20 L44 28 L32 28 L40 20 Z"/>
+  
+  <!-- Texto "correios" -->
+  <text x="60" y="26" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#003D7A">correios</text>
+</svg>

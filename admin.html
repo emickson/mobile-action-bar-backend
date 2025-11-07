@@ -1,0 +1,2158 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Painel Admin - Gerenciamento</title>
+  <style>
+    :root {
+      --pink: #ff2d55;
+      --pink-dark: #e02649;
+      --gray-text: #1f2328;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; color: #111; background: #f3f4f6; }
+    
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    
+    /* Header */
+    .header { background: #fff; border-bottom: 2px solid #eef0f3; padding: 20px; margin-bottom: 24px; }
+    .header-content { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+    .header-title { font-size: 24px; font-weight: 800; color: var(--gray-text); }
+    .header-actions { display: flex; gap: 12px; }
+    
+    /* Tabs */
+    .tabs { display: flex; gap: 8px; margin-bottom: 24px; overflow-x: auto; }
+    .tab { padding: 12px 20px; background: #fff; border: 1px solid #e7e9ec; border-radius: 8px; cursor: pointer; font-weight: 600; white-space: nowrap; }
+    .tab:hover { background: #f9fafb; }
+    .tab.active { background: var(--pink); color: #fff; border-color: var(--pink); }
+    
+    /* Card */
+    .card { background: #fff; border: 1px solid #eef0f3; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+    .card-title { font-size: 18px; font-weight: 700; color: var(--gray-text); margin-bottom: 16px; }
+    
+    /* Form */
+    .form-group { margin-bottom: 20px; }
+    .form-label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--gray-text); }
+    .form-input, .form-textarea { width: 100%; padding: 12px; border: 1px solid #e7e9ec; border-radius: 8px; font-size: 14px; font-family: inherit; }
+    .form-textarea { min-height: 120px; resize: vertical; }
+    .form-input:focus, .form-textarea:focus { outline: none; border-color: var(--pink); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-help { font-size: 13px; color: #6b7280; margin-top: 4px; }
+    
+    /* Buttons */
+    .btn { padding: 12px 24px; border: 0; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; }
+    .btn-primary { background: var(--pink); color: #fff; }
+    .btn-primary:hover { background: var(--pink-dark); }
+    .btn-secondary { background: #f1f2f4; color: var(--gray-text); }
+    .btn-secondary:hover { background: #e5e7eb; }
+    .btn-success { background: #10b981; color: #fff; }
+    .btn-success:hover { background: #059669; }
+    .btn-danger { background: #ef4444; color: #fff; }
+    .btn-danger:hover { background: #dc2626; }
+    
+    /* Review item */
+    .review-item { border: 1px solid #eef0f3; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+    .review-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .review-item-actions { display: flex; gap: 8px; }
+    
+    /* Tab content */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    /* Success message */
+    .success-message { background: #d1fae5; color: #065f46; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; display: none; }
+    .success-message.show { display: block; }
+    
+    /* Preview */
+    .preview-section { background: #f9fafb; border: 1px solid #e7e9ec; border-radius: 8px; padding: 16px; margin-top: 16px; }
+    .preview-title { font-weight: 600; margin-bottom: 12px; }
+    
+    /* File upload */
+    .upload-area { border: 2px dashed #e7e9ec; border-radius: 8px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; }
+    .upload-area:hover { border-color: var(--pink); background: #fff0f3; }
+    .upload-area.dragover { border-color: var(--pink); background: #fff0f3; }
+    .upload-icon { width: 48px; height: 48px; margin: 0 auto 12px; color: #9aa1a9; }
+    .upload-text { font-weight: 600; color: var(--gray-text); margin-bottom: 4px; }
+    .upload-hint { font-size: 13px; color: #6b7280; }
+    .file-input { display: none; }
+    
+    /* Image preview */
+    .image-preview { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+    .image-preview-item { position: relative; width: 120px; height: 120px; border-radius: 8px; overflow: hidden; border: 1px solid #e7e9ec; }
+    .image-preview-item img { width: 100%; height: 100%; object-fit: cover; }
+    .image-preview-remove { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; background: rgba(239, 68, 68, 0.9); border: 0; border-radius: 50%; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .image-preview-remove:hover { background: #dc2626; }
+    /* Login screen */
+    .login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; z-index: 10000; }
+    .login-box { background: #fff; border-radius: 16px; padding: 40px; max-width: 400px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .login-title { font-size: 24px; font-weight: 800; color: var(--gray-text); margin-bottom: 8px; text-align: center; }
+    .login-subtitle { font-size: 14px; color: #6b7280; margin-bottom: 32px; text-align: center; }
+    .login-input { width: 100%; padding: 14px; border: 2px solid #e7e9ec; border-radius: 8px; font-size: 15px; margin-bottom: 16px; }
+    .login-input:focus { outline: none; border-color: var(--pink); }
+    .login-btn { width: 100%; padding: 14px; background: var(--pink); color: #fff; border: 0; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; }
+    .login-btn:hover { background: var(--pink-dark); }
+    .login-error { color: #ef4444; font-size: 13px; margin-top: -8px; margin-bottom: 16px; display: none; }
+    .login-error.show { display: block; }
+    .hidden { display: none !important; }
+    .show { display: block !important; }
+    
+    /* Products list */
+    .product-item { border: 1px solid #eef0f3; border-radius: 8px; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 16px; }
+    .product-item-image { width: 80px; height: 80px; border-radius: 8px; object-fit: cover; background: #f6f7f9; flex-shrink: 0; }
+    .product-item-info { flex: 1; }
+    .product-item-name { font-weight: 700; font-size: 15px; color: var(--gray-text); margin-bottom: 4px; }
+    .product-item-price { color: var(--pink); font-weight: 600; font-size: 14px; }
+    .product-item-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .product-item-link { color: #6b7280; font-size: 12px; margin-top: 4px; word-break: break-all; }
+  </style>
+  <script>
+    console.log('Admin panel script loading...'); // Debug
+    // Password protection - MOVED TO HEAD TO LOAD FIRST
+    const ADMIN_PASSWORD = '099212gta';
+    
+    function checkPassword() {
+      const passwordInput = document.getElementById('login-password');
+      const errorEl = document.getElementById('login-error');
+      const password = passwordInput?.value;
+      
+      if (password === ADMIN_PASSWORD) {
+        const loginScreen = document.getElementById('login-screen');
+        const adminPanel = document.getElementById('admin-panel');
+        
+        if (loginScreen) loginScreen.style.display = 'none';
+        if (adminPanel) adminPanel.style.display = 'block';
+        
+        sessionStorage.setItem('admin_logged_in', 'true');
+        
+        // Load admin data immediately after login
+        setTimeout(() => {
+          if (typeof loadAdminData === 'function') {
+            loadAdminData();
+            console.log('Admin data loaded after login');
+          }
+        }, 200);
+      } else {
+        if (errorEl) errorEl.classList.add('show');
+        if (passwordInput) {
+          passwordInput.value = '';
+          passwordInput.focus();
+        }
+      }
+    }
+  </script>
+</head>
+<body>
+  <!-- Login Screen -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-box">
+      <h2 class="login-title">🔐 Acesso Admin</h2>
+      <p class="login-subtitle">Digite a senha para acessar o painel</p>
+      <input type="password" id="login-password" class="login-input" placeholder="Senha de acesso" autofocus />
+      <div class="login-error" id="login-error">Senha incorreta. Tente novamente.</div>
+      <button class="login-btn" onclick="checkPassword()">Entrar</button>
+    </div>
+  </div>
+
+  <!-- Admin Panel -->
+  <div id="admin-panel" class="hidden">
+  <div class="header">
+    <div class="header-content">
+      <h1 class="header-title">Painel Admin</h1>
+      <div class="header-actions">
+        <button class="btn btn-secondary" onclick="window.open('index.html', '_blank')">Ver Site</button>
+        <button class="btn btn-success" onclick="saveAll()">Salvar Tudo</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="success-message" id="success-message">Alterações salvas com sucesso!</div>
+    
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('criativos')">Criativos</div>
+      <div class="tab" onclick="switchTab('produto')">Produto</div>
+      <div class="tab" onclick="switchTab('dominio')">Domínio</div>
+      <div class="tab" onclick="switchTab('loja')">Loja</div>
+      <div class="tab" onclick="switchTab('avaliacoes')">Avaliações</div>
+      <div class="tab" onclick="switchTab('descricao')">Descrição</div>
+      <div class="tab" onclick="switchTab('pagamento')">Pagamento</div>
+      <div class="tab" onclick="switchTab('gateway')">Gateway Vegas</div>
+    </div>
+
+    <!-- Tab: Criativos -->
+    <div class="tab-content active" id="tab-criativos">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+          <div>
+            <h2 class="card-title" style="margin:0 0 8px 0;">📦 Meus Produtos</h2>
+            <p style="color:#6b7280;margin:0;font-size:14px;">Gerencie todos os seus produtos em um só lugar</p>
+          </div>
+          <button class="btn btn-primary" onclick="switchTab('produto');clearProductForm();" style="white-space:nowrap;">
+            <span style="font-size:16px;margin-right:4px;">+</span> Novo Produto
+          </button>
+        </div>
+        
+        <div id="products-list"></div>
+      </div>
+    </div>
+
+    <!-- Tab: Produto -->
+    <div class="tab-content" id="tab-produto">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+          <h2 class="card-title" style="margin:0;">Informações do Produto</h2>
+          <button class="btn btn-secondary" onclick="clearProductForm()">+ Novo Produto</button>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nome do Produto</label>
+          <input type="text" class="form-input" id="product-name" value="Patinete Elétrico Scooter Para Adultos 350W Capacidade de Carga de 150KG" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Link do Produto (URL)</label>
+          <input type="text" class="form-input" id="product-url" placeholder="Ex: produto-123.html ou https://seudominio.com/produto-123.html" />
+          <div class="form-help">URL completa ou relativa da página do produto</div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Preço (R$)</label>
+            <input type="number" class="form-input" id="product-price" value="1574.99" step="0.01" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Preço Antigo (R$)</label>
+            <input type="number" class="form-input" id="product-old-price" value="4999.00" step="0.01" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Imagens do Produto (até 9 imagens)</label>
+          <div class="upload-area" onclick="document.getElementById('product-images-file').click()">
+            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <div class="upload-text">Clique para fazer upload (múltiplas imagens)</div>
+            <div class="upload-hint">ou arraste as imagens aqui - máximo 9 imagens</div>
+          </div>
+          <input type="file" id="product-images-file" class="file-input" accept="image/*" multiple onchange="handleProductImagesUpload(event)" />
+          <div class="image-preview" id="product-images-preview"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Avaliação Média</label>
+            <input type="number" class="form-input" id="product-rating" value="4.2" step="0.1" min="0" max="5" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Número de Vendidos</label>
+            <input type="text" class="form-input" id="product-sold" value="88" />
+          </div>
+        </div>
+        
+        <h3 style="font-size:16px;font-weight:700;margin:24px 0 16px;">🏷️ Badges de Desconto</h3>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Desconto Percentual</label>
+            <input type="text" class="form-input" id="product-discount-badge" value="-45%" placeholder="Ex: -45%" />
+            <div class="form-help">Badge de desconto que aparece no topo do produto</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Texto Promocional</label>
+            <input type="text" class="form-input" id="product-promo-text" value="Desconto de 10%, máximo de R$ 25" placeholder="Ex: Desconto de 10%, máximo de R$ 25" />
+            <div class="form-help">Texto de promoção que aparece abaixo do preço</div>
+          </div>
+        </div>
+        
+        <h3 style="font-size:16px;font-weight:700;margin:24px 0 16px;">Informações de Entrega</h3>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Dias Mínimos para Entrega</label>
+            <input type="number" class="form-input" id="shipping-days-min" value="2" min="0" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Dias Máximos para Entrega</label>
+            <input type="number" class="form-input" id="shipping-days-max" value="6" min="0" />
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Frete Antigo (R$)</label>
+            <input type="number" class="form-input" id="shipping-old-fee" value="33.40" step="0.01" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Frete Novo (R$)</label>
+            <input type="number" class="form-input" id="shipping-new-fee" value="13.40" step="0.01" />
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Texto do Desconto no Frete</label>
+          <input type="text" class="form-input" id="shipping-discount-text" value="Desconto de R$ 20 no frete em pedidos acima de R$ 29" />
+          <div class="form-help">Texto que aparece abaixo das informações de frete</div>
+        </div>
+        
+        <h3 style="font-size:16px;font-weight:700;margin:24px 0 16px;">💳 Integração IronPay (Gateway de Pagamento)</h3>
+        <div class="card" style="background:#fff9f0;border-color:#fbbf24;margin-bottom:20px;">
+          <div style="display:flex;align-items:start;gap:12px;">
+            <svg style="width:24px;height:24px;color:#f59e0b;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <div style="flex:1;">
+              <div style="font-weight:600;color:#92400e;margin-bottom:4px;">Importante: Hashes Únicos por Produto</div>
+              <div style="font-size:13px;color:#78350f;line-height:1.5;">
+                Cada produto precisa ter seu próprio <strong>Offer Hash</strong> e <strong>Product Hash</strong> criados no painel IronPay.
+                Esses valores garantem que o pagamento seja vinculado ao produto correto.
+                <br><br>
+                <strong>Como obter os hashes:</strong><br>
+                1. Acesse o painel IronPay<br>
+                2. Vá em "Ofertas e Links" → Criar nova oferta para este produto<br>
+                3. Copie o <strong>Offer Hash</strong> (ex: 7becb)<br>
+                4. Copie o <strong>Product Hash</strong> associado (ex: 7tjdfkshdv)<br>
+                5. Cole os valores abaixo
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Offer Hash (IronPay)</label>
+            <input type="text" class="form-input" id="product-offer-hash" placeholder="Ex: 7becb" />
+            <div class="form-help">Hash da oferta criada no painel IronPay para este produto</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Product Hash (IronPay)</label>
+            <input type="text" class="form-input" id="product-product-hash" placeholder="Ex: 7tjdfkshdv" />
+            <div class="form-help">Hash do produto no painel IronPay</div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+              <svg style="width:16px;height:16px;color:#16a34a;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+              <span style="font-weight:600;color:#166534;font-size:13px;">Configuração Automática</span>
+            </div>
+            <div style="font-size:12px;color:#166534;line-height:1.4;">
+              Quando o cliente finalizar a compra, esses hashes serão enviados automaticamente para o gateway IronPay junto com o pagamento.
+            </div>
+          </div>
+        </div>
+        
+        <h3 style="font-size:16px;font-weight:700;margin:24px 0 16px;">Status e Publicação</h3>
+        
+        <div class="form-group">
+          <label class="form-label">Status do Produto</label>
+          <select class="form-input" id="product-status" disabled>
+            <option value="em_criacao">Em Criação</option>
+            <option value="finalizado">Finalizado</option>
+          </select>
+          <div class="form-help">O status muda automaticamente ao finalizar o produto</div>
+        </div>
+        
+        <div class="form-group" id="product-url-container" style="display:none;">
+          <label class="form-label">URL do Produto</label>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="text" class="form-input" id="product-generated-url" readonly style="flex:1;" />
+            <button class="btn btn-secondary" onclick="copyGeneratedUrl()" style="white-space:nowrap;">📋 Copiar</button>
+            <button class="btn btn-secondary" onclick="openProductUrl()" style="white-space:nowrap;">🔗 Abrir</button>
+          </div>
+          <div class="form-help">URL gerada automaticamente ao finalizar</div>
+        </div>
+        
+        <div style="display:flex;gap:12px;margin-top:20px;">
+          <button class="btn btn-primary" onclick="saveProduct()" style="flex:1;">💾 Salvar Rascunho</button>
+          <button class="btn btn-success" onclick="finalizeProduct()" id="finalize-btn" style="flex:1;">✅ Finalizar e Publicar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Domínio -->
+    <div class="tab-content" id="tab-dominio">
+      <div class="card">
+        <h2 class="card-title">Configuração de Domínio</h2>
+        <p style="color:#6b7280;margin-bottom:20px;">Configure o domínio base do seu site. As páginas dos produtos serão criadas automaticamente como subpáginas.</p>
+        
+        <div class="form-group">
+          <label class="form-label">Domínio Base</label>
+          <input type="text" class="form-input" id="base-domain" placeholder="https://meusite.com" />
+          <div class="form-help">Exemplo: https://meusite.com ou https://minhaloja.netlify.app</div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Formato da URL dos Produtos</label>
+          <select class="form-input" id="url-format">
+            <option value="slug">Nome do produto (slug)</option>
+            <option value="id">ID do produto</option>
+            <option value="custom">Personalizado</option>
+          </select>
+          <div class="form-help">Como as URLs dos produtos serão geradas</div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Prefixo (Opcional)</label>
+          <input type="text" class="form-input" id="url-prefix" placeholder="produto" />
+          <div class="form-help">Exemplo: "produto" gerará URLs como /produto/patinete-eletrico</div>
+        </div>
+        
+        <div style="background:#f9fafb;border:1px solid #e7e9ec;border-radius:8px;padding:16px;margin:20px 0;">
+          <h3 style="font-size:14px;font-weight:700;margin:0 0 12px 0;">Preview da URL:</h3>
+          <div id="url-preview" style="color:#6b7280;font-size:14px;word-break:break-all;">
+            Configure o domínio para ver o preview
+          </div>
+        </div>
+        
+        <button class="btn btn-primary" onclick="saveDomain()">Salvar Configurações</button>
+      </div>
+    </div>
+
+    <!-- Tab: Loja -->
+    <div class="tab-content" id="tab-loja">
+      <div class="card">
+        <h2 class="card-title">Informações da Loja</h2>
+        <div class="form-group">
+          <label class="form-label">Nome da Loja</label>
+          <input type="text" class="form-input" id="store-name" value="Beifou shop" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Logo da Loja</label>
+          <div class="upload-area" onclick="document.getElementById('store-logo-file').click()">
+            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <div class="upload-text">Clique para fazer upload do logo</div>
+            <div class="upload-hint">ou arraste a imagem aqui</div>
+          </div>
+          <input type="file" id="store-logo-file" class="file-input" accept="image/*" onchange="handleStoreLogoUpload(event)" />
+          <div class="image-preview" id="store-logo-preview"></div>
+          <input type="url" class="form-input" id="store-logo" placeholder="Ou cole a URL do logo" style="margin-top: 12px;" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Vendidos (ex: 16,9K)</label>
+          <input type="text" class="form-input" id="store-sales" value="16,9K" />
+        </div>
+        <button class="btn btn-primary" onclick="saveStore()">Salvar Loja</button>
+      </div>
+    </div>
+
+    <!-- Tab: Avaliações -->
+    <div class="tab-content" id="tab-avaliacoes">
+      <div class="card">
+        <h2 class="card-title">Gerenciar Avaliações</h2>
+        
+        <!-- Contador de Avaliações Exibidas -->
+        <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:16px;margin-bottom:20px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <svg style="width:20px;height:20px;color:#0284c7;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+            </svg>
+            <span style="font-weight:600;color:#0c4a6e;font-size:14px;">Contador de Avaliações</span>
+          </div>
+          <div style="font-size:13px;color:#075985;margin-bottom:12px;line-height:1.5;">
+            Defina quantas avaliações aparecerão no contador <strong>"Avaliações dos clientes (X)"</strong> na página do produto.
+            Este número é apenas visual e não precisa corresponder às avaliações reais abaixo.
+          </div>
+          <div style="display:flex;align-items:end;gap:12px;">
+            <div style="flex:1;">
+              <label style="display:block;font-weight:600;margin-bottom:8px;color:#0c4a6e;font-size:13px;">Número de Avaliações Exibidas</label>
+              <input type="number" class="form-input" id="reviews-count-display" value="3" min="0" max="10000" placeholder="Ex: 700" />
+            </div>
+            <button class="btn btn-primary" onclick="saveReviewsCount()" style="white-space:nowrap;">Salvar Contador</button>
+          </div>
+        </div>
+        
+        <div id="reviews-list"></div>
+        <button class="btn btn-secondary" onclick="addReview()">+ Adicionar Avaliação</button>
+      </div>
+    </div>
+
+    <!-- Tab: Descrição -->
+    <div class="tab-content" id="tab-descricao">
+      <div class="card">
+        <h2 class="card-title">Descrição do Produto</h2>
+        <div class="form-group">
+          <label class="form-label">Descrição Completa</label>
+          <textarea class="form-textarea" id="product-description" rows="15">Bem-vindo à loja AUXOM, siga a loja para obter mais cupons
+Se você tiver alguma dúvida sobre o produto, por favor deixe UMA Mensagem para o cliente e nós responderemos a tempo!
+Empresas brasileiras locais, transporte rápido!
+
+🚚 Destaques:
+
+Potente Motor de 350W: Equipado com um motor de 350W, oferece aceleração rápida e uma condução suave e eficiente para o dia a dia.
+
+Autonomia de até 28KM: Com uma única carga, o patinete pode percorrer até 28KM, perfeito para deslocamentos sem a necessidade de recarga constante.
+
+Velocidade Máxima de 30KM/H: Atinge uma velocidade de até 30KM/H, permitindo viagens rápidas e eficiente.
+
+Capacidade de Carga de 150KG: Suporta até 150KG.</textarea>
+        </div>
+        <button class="btn btn-primary" onclick="saveDescription()">Salvar Descrição</button>
+      </div>
+    </div>
+
+    <!-- Tab: Pagamento -->
+    <div class="tab-content" id="tab-pagamento">
+      <div class="card">
+        <h2 class="card-title">Configurações de Pagamento PIX (Manual)</h2>
+        <p style="color:#6b7280;margin-bottom:20px;">⚠️ Configuração manual. Para pagamento automático, use a aba "Gateway Vegas".</p>
+        <div class="form-group">
+          <label class="form-label">URL do QR Code PIX</label>
+          <input type="url" class="form-input" id="pix-qrcode-url" placeholder="https://exemplo.com/qrcode.png" />
+          <div class="form-help">Cole a URL da imagem do QR Code PIX</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Código PIX (Copia e Cola)</label>
+          <textarea class="form-textarea" id="pix-code" rows="4" placeholder="00020126580014br.gov.bcb.pix..."></textarea>
+          <div class="form-help">Cole o código PIX completo</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">URL da Página de Confirmação</label>
+          <input type="url" class="form-input" id="confirmation-url" value="confirmacao.html" />
+          <div class="form-help">URL para onde o usuário será redirecionado após o pagamento</div>
+        </div>
+        <button class="btn btn-primary" onclick="savePayment()">Salvar Configurações</button>
+      </div>
+    </div>
+
+    <!-- Tab: Gateway -->
+    <div class="tab-content" id="tab-gateway">
+      <div class="card">
+        <h2 class="card-title">🔌 Configurar Gateway de Pagamento</h2>
+        <p style="color:#6b7280;margin-bottom:20px;">Integre qualquer gateway PIX usando apenas o Token de API</p>
+        
+        <!-- Status atual -->
+        <div id="gateway-status-display"></div>
+        
+        <div id="success-msg" style="background:#dcfce7;border-left:4px solid #10b981;color:#166534;padding:12px 16px;border-radius:8px;margin-bottom:20px;display:none;font-weight:600;">
+          ✅ Configurações salvas com sucesso!
+        </div>
+        
+        <!-- Info box -->
+        <div style="background:#dbeafe;border-left:4px solid #3b82f6;padding:16px;border-radius:8px;margin-bottom:24px;">
+          <h3 style="color:#1e40af;font-size:14px;margin-bottom:8px;">ℹ️ Como funciona:</h3>
+          <ol style="color:#1e40af;font-size:13px;padding-left:20px;line-height:1.8;margin:0;">
+            <li>Cliente finaliza checkout no seu site</li>
+            <li>Sistema chama seu <strong>Backend (/api/pagar)</strong></li>
+            <li>Backend chama o <strong>Gateway</strong> com seu token</li>
+            <li>Gateway gera QR Code PIX em tempo real</li>
+            <li>Cliente paga e recebe confirmação automática</li>
+          </ol>
+          <div style="background:#fff3cd;padding:10px;border-radius:6px;margin-top:12px;font-size:12px;color:#856404;">
+            <strong>💡 Gateways Suportados:</strong> TriboPay, Asaas, Mercado Pago, PagSeguro, Pagar.me, Gerencianet e qualquer outro que forneça API REST para PIX.
+          </div>
+        </div>
+        
+        <!-- Form -->
+        <div class="form-group">
+          <label class="form-label">🔑 Token do Gateway <span style="color:#ff2d55;">*</span></label>
+          <input type="password" class="form-input" id="gateway-token" placeholder="Cole o token do seu gateway aqui" />
+          <div style="background:#fef3c7;padding:12px;border-radius:8px;margin-top:8px;font-size:13px;color:#92400e;line-height:1.6;">
+            <strong>📍 Como obter o token:</strong><br><br>
+            <strong>IronPay:</strong> Painel → Integrações → API<br>
+            <strong>TriboPay:</strong> Painel → Configurações → API (Limite: R$ 1.500,00)<br>
+            <strong>Asaas:</strong> Configurações → Integrações → API Key ($aact_...)<br>
+            <strong>Mercado Pago:</strong> Developers → Credenciais → Access Token<br>
+            <strong>PagSeguro:</strong> Integrações → Token de Produção<br>
+            <strong>Pagar.me:</strong> Configurações → API Keys<br>
+            <strong>Outros:</strong> Consulte a documentação do gateway<br><br>
+            ⚠️ <strong>Backend necessário:</strong> server.js deve estar rodando.
+          </div>
+        </div>
+
+        <!-- IronPay Hashes -->
+        <div style="background:#fff0f3;border-left:4px solid #ff2d55;padding:16px;border-radius:8px;margin-bottom:24px;">
+          <h3 style="color:#e02649;font-size:14px;margin-bottom:12px;">🚨 IMPORTANTE - Apenas para IronPay</h3>
+          <p style="color:#991b1b;font-size:13px;line-height:1.6;margin-bottom:12px;">
+            O IronPay requer <strong>offer_hash</strong> e <strong>product_hash</strong> para criar transações. 
+            Estes valores são únicos da sua conta e <strong>DEVEM</strong> pertencer à mesma conta do token.
+          </p>
+          <div style="background:#fef2f2;padding:12px;border-radius:6px;margin-bottom:12px;">
+            <p style="color:#991b1b;font-size:12px;margin:0;line-height:1.6;">
+              <strong>🚨 Erro 403 (Unauthenticated)?</strong><br>
+              Verifique se <code style="background:#fff;padding:2px 6px;border-radius:4px;">offer_hash</code>, 
+              <code style="background:#fff;padding:2px 6px;border-radius:4px;">product_hash</code> e 
+              <code style="background:#fff;padding:2px 6px;border-radius:4px;">api_token</code> 
+              são da <strong>MESMA CONTA</strong> no IronPay!
+            </p>
+          </div>
+          <p style="color:#991b1b;font-size:12px;margin:0;line-height:1.6;">
+            <strong>📍 Onde encontrar:</strong><br>
+            1. Painel IronPay → <strong>Ofertas e Links</strong> → Selecione a oferta<br>
+            2. Copie o <strong>offer_hash</strong> (ex: <code style="background:#fff;padding:2px 6px;border-radius:4px;">7becb</code>)<br>
+            3. Na mesma tela, copie o <strong>product_hash</strong> (ex: <code style="background:#fff;padding:2px 6px;border-radius:4px;">7tjdfkshdv</code>)<br>
+            4. Ou vá em <strong>Produtos</strong> → Selecione o produto → Copie os hashes
+          </p>
+        </div>
+
+        <div class="form-row" style="margin-bottom:20px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">🏷️ Offer Hash (IronPay)</label>
+            <input type="text" class="form-input" id="offer-hash" placeholder="Ex: 7becb" />
+            <div class="form-help">Hash da oferta no IronPay. Deixe em branco se usar outro gateway.</div>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">📦 Product Hash (IronPay)</label>
+            <input type="text" class="form-input" id="product-hash" placeholder="Ex: 7tjdfkshdv" />
+            <div class="form-help">Hash do produto no IronPay. Deixe em branco se usar outro gateway.</div>
+          </div>
+        </div>
+        
+        <!-- Buttons -->
+        <div style="display:flex;gap:12px;">
+          <button class="btn btn-primary" onclick="saveGatewayToken()" style="flex:1;">💾 Salvar e Ativar Gateway</button>
+          <button class="btn btn-secondary" onclick="clearGatewayConfig()">🗑️ Limpar</button>
+        </div>
+        
+        <!-- Webhook info -->
+        <div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:16px;border-radius:8px;margin-top:24px;">
+          <p style="color:#92400e;font-size:13px;margin:0;line-height:1.6;">
+            <strong>💻 Backend Necessário:</strong><br>
+            <code style="background:#fff;padding:6px 10px;border-radius:4px;font-family:monospace;display:inline-block;margin-top:8px;font-size:12px;">node server.js</code> deve estar rodando!<br><br>
+            <strong>🛠️ Webhook (Notificações):</strong><br>
+            <strong>TriboPay:</strong> <code style="background:#fff;padding:4px 8px;border-radius:4px;font-family:monospace;font-size:11px;">https://seu-dominio.com/webhook/tribopay</code><br>
+            <strong>Asaas:</strong> <code style="background:#fff;padding:4px 8px;border-radius:4px;font-family:monospace;font-size:11px;">https://seu-dominio.com/webhook/asaas</code><br>
+            <small style="display:block;margin-top:8px;">Configure no painel do gateway para receber notificações de pagamento.</small>
+          </p>
+        </div>
+      </div>
+      
+      <!-- Gateways testados -->
+      <div class="card" style="margin-top:20px;">
+        <h3 class="card-title">🏆 Gateways Testados e Funcionando</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div style="border:2px solid #86efac;border-radius:8px;padding:16px;background:#f0fdf4;">
+            <h4 style="margin:0 0 8px 0;font-size:16px;font-weight:700;color:#166534;">✅ TriboPay</h4>
+            <p style="margin:0 0 4px 0;font-size:13px;color:#166534;">Testado e Funcionando</p>
+            <p style="margin:0;font-size:12px;color:#16a34a;">Limite: R$ 1.500,00 por transação</p>
+          </div>
+          <div style="border:2px solid #86efac;border-radius:8px;padding:16px;background:#f0fdf4;">
+            <h4 style="margin:0 0 8px 0;font-size:16px;font-weight:700;color:#166534;">✅ Asaas</h4>
+            <p style="margin:0 0 4px 0;font-size:13px;color:#166534;">Testado e Funcionando</p>
+            <p style="margin:0;font-size:12px;color:#16a34a;">Sem limite de valor</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Original gateway content removed - script below -->
+    <script>
+    // Funções do Gateway
+    function loadGatewayConfig() {
+      const saved = localStorage.getItem('gateway_config');
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          if (data.apiKey) {
+            document.getElementById('gateway-token').value = data.apiKey;
+            updateGatewayStatus(true, data.savedAt);
+          }
+          if (data.offerHash) {
+            document.getElementById('offer-hash').value = data.offerHash;
+          }
+          if (data.productHash) {
+            document.getElementById('product-hash').value = data.productHash;
+          }
+        } catch (e) {
+          console.error('Erro ao carregar config:', e);
+        }
+      } else {
+        updateGatewayStatus(false);
+      }
+    }
+    
+    function updateGatewayStatus(active, savedAt) {
+      const statusDiv = document.getElementById('gateway-status-display');
+      if (active) {
+        const dateStr = savedAt ? new Date(savedAt).toLocaleString('pt-BR') : 'agora';
+        statusDiv.innerHTML = `
+          <div style="background:#dcfce7;border-left:4px solid #10b981;padding:12px;border-radius:8px;margin-bottom:20px;">
+            <strong style="color:#166534;">✅ Gateway Ativo</strong><br>
+            <small style="color:#166534;">Salvo em: ${dateStr}</small>
+          </div>
+        `;
+      } else {
+        statusDiv.innerHTML = `
+          <div style="background:#fef2f2;border-left:4px solid #ef4444;padding:12px;border-radius:8px;margin-bottom:20px;">
+            <strong style="color:#991b1b;">⚠️ Gateway Não Configurado</strong><br>
+            <small style="color:#991b1b;">Cole o token do seu gateway para ativar</small>
+          </div>
+        `;
+      }
+    }
+    
+    function saveGatewayToken() {
+      const token = document.getElementById('gateway-token').value.trim();
+      const offerHash = document.getElementById('offer-hash').value.trim();
+      const productHash = document.getElementById('product-hash').value.trim();
+      
+      if (!token) {
+        alert('⚠️ Por favor, cole o token do gateway!');
+        return;
+      }
+      
+      if (token.length < 20) {
+        alert('⚠️ Token inválido!\n\nO token do gateway deve ter mais de 20 caracteres.');
+        return;
+      }
+      
+      // Se for IronPay (token longo), validar hashes
+      if (token.length > 40 && (!offerHash || !productHash)) {
+        const confirmar = confirm('⚠️ ATENÇÃO - IronPay Detectado!\n\nVocê não preencheu offer_hash e/ou product_hash.\n\nIsso causará ERRO 403 (Unauthenticated) ao tentar criar transações.\n\nCertifique-se de que os hashes são da MESMA CONTA do token!\n\nDeseja continuar mesmo assim?');
+        if (!confirmar) return;
+      }
+      
+      const data = {
+        provider: 'custom',
+        apiKey: token,
+        clientSecret: token,
+        offerHash: offerHash || null,
+        productHash: productHash || null,
+        savedAt: new Date().toISOString()
+      };
+      
+      localStorage.setItem('gateway_config', JSON.stringify(data));
+      
+      const successMsg = document.getElementById('success-msg');
+      successMsg.style.display = 'block';
+      setTimeout(() => {
+        successMsg.style.display = 'none';
+      }, 3000);
+      
+      updateGatewayStatus(true, data.savedAt);
+      
+      alert('✅ GATEWAY ATIVADO!\n\nGateway de pagamento configurado com sucesso.\nVocê já pode fazer vendas!');
+    }
+    
+    function clearGatewayConfig() {
+      if (confirm('⚠️ Deseja realmente desativar o gateway?')) {
+        localStorage.removeItem('gateway_config');
+        document.getElementById('gateway-token').value = '';
+        document.getElementById('offer-hash').value = '';
+        document.getElementById('product-hash').value = '';
+        updateGatewayStatus(false);
+        alert('✅ Gateway desativado!');
+      }
+    }
+    
+    // Carregar config ao trocar para aba gateway
+    const originalSwitchTab = window.switchTab;
+    window.switchTab = function(tabName) {
+      originalSwitchTab(tabName);
+      if (tabName === 'gateway') {
+        loadGatewayConfig();
+      }
+    };
+    </script>
+    
+    <!-- Tab: Descrição -->
+      <div class="card">
+        <h2 class="card-title">🔌 Configuração de Pagamento PIX (Luna Checkout + IronPay)</h2>
+        <p style="color:#6b7280;margin-bottom:20px;">Configure a integração com Luna Checkout para gerar QR Codes PIX via IronPay automaticamente.</p>
+        
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:16px;margin-bottom:20px;">
+          <h3 style="font-size:14px;font-weight:700;margin:0 0 8px 0;color:#1e40af;">ℹ️ Como funciona:</h3>
+          <ul style="margin:0;padding-left:20px;color:#1e40af;font-size:14px;line-height:1.6;">
+            <li>Cliente preenche dados no checkout</li>
+            <li>Sistema chama API do gateway automaticamente</li>
+            <li>QR Code e código PIX são gerados em tempo real</li>
+            <li>Sistema verifica status do pagamento a cada 5 segundos</li>
+            <li>Quando pago, cliente é redirecionado automaticamente</li>
+          </ul>
+        </div>
+
+        <!-- Seleção de Gateway -->
+        <div class="form-group">
+          <label class="form-label">Gateway de Pagamento <span style="color:#ff2d55;">*</span></label>
+          <select class="form-input" id="gateway-provider" onchange="toggleGatewayFields()">
+            <option value="">Selecione um gateway...</option>
+            <option value="vegas">Vegas PIX (Atual)</option>
+            <option value="mercadopago">Mercado Pago</option>
+            <option value="gerencianet">Gerencianet (Efí)</option>
+            <option value="pagarme">Pagar.me</option>
+            <option value="asaas">Asaas</option>
+            <option value="custom">Personalizado</option>
+          </select>
+          <div class="form-help">Escolha o gateway que você possui conta</div>
+        </div>
+
+        <!-- Campos Vegas -->
+        <div id="fields-vegas" class="gateway-fields" style="display:none;">
+          <div class="form-group">
+            <label class="form-label">API Key <span style="color:#ff2d55;">*</span></label>
+            <input type="password" class="form-input" id="vegas-api-key" placeholder="Sua API Key do Vegas" />
+            <div class="form-help">⚠️ Mantenha em segredo! Nunca compartilhe publicamente</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Domínio do Checkout</label>
+            <input type="url" class="form-input" id="vegas-domain" value="https://checkout.shoptlktok.shop/api" />
+            <div class="form-help">URL base da API Vegas</div>
+          </div>
+        </div>
+
+        <!-- Campos Mercado Pago -->
+        <div id="fields-mercadopago" class="gateway-fields" style="display:none;">
+          <div class="form-group">
+            <label class="form-label">Access Token <span style="color:#ff2d55;">*</span></label>
+            <input type="password" class="form-input" id="mp-access-token" placeholder="APP_USR-xxxxxxxxx-xxxxxxxxx" />
+            <div class="form-help">Obtenha em: Mercado Pago Developers → Credenciais</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Public Key</label>
+            <input type="text" class="form-input" id="mp-public-key" placeholder="APP_USR-xxxxxxxx-xxxx-xxxx" />
+            <div class="form-help">Public Key da sua aplicação</div>
+          </div>
+
+          <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:12px;margin-top:12px;">
+            <p style="margin:0;font-size:13px;color:#9a3412;">
+              📚 <strong>Como obter:</strong><br>
+              1. Acesse <a href="https://www.mercadopago.com.br/developers" target="_blank" style="color:#ea580c;">mercadopago.com.br/developers</a><br>
+              2. Vá em "Suas integrações"<br>
+              3. Copie o Access Token (use TEST para testes)
+            </p>
+          </div>
+        </div>
+
+        <!-- Campos Gerencianet -->
+        <div id="fields-gerencianet" class="gateway-fields" style="display:none;">
+          <div class="form-group">
+            <label class="form-label">Client ID <span style="color:#ff2d55;">*</span></label>
+            <input type="text" class="form-input" id="gn-client-id" placeholder="Client_Id_xxxxxxxxxxxxx" />
+            <div class="form-help">Client ID da API Gerencianet</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Client Secret <span style="color:#ff2d55;">*</span></label>
+            <input type="password" class="form-input" id="gn-client-secret" placeholder="Client_Secret_xxxxxxxxxx" />
+            <div class="form-help">Client Secret da API Gerencianet</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Chave PIX <span style="color:#ff2d55;">*</span></label>
+            <input type="text" class="form-input" id="gn-pix-key" placeholder="suachave@email.com" />
+            <div class="form-help">Chave PIX cadastrada na Gerencianet</div>
+          </div>
+
+          <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:12px;margin-top:12px;">
+            <p style="margin:0;font-size:13px;color:#9a3412;">
+              📚 <strong>Como obter:</strong><br>
+              1. Acesse <a href="https://gerencianet.com.br" target="_blank" style="color:#ea580c;">gerencianet.com.br</a><br>
+              2. Painel → Configurações → API<br>
+              3. Gere Client ID e Client Secret
+            </p>
+          </div>
+        </div>
+
+        <!-- Campos Pagar.me -->
+        <div id="fields-pagarme" class="gateway-fields" style="display:none;">
+          <div class="form-group">
+            <label class="form-label">API Key <span style="color:#ff2d55;">*</span></label>
+            <input type="password" class="form-input" id="pm-api-key" placeholder="sk_test_xxxxxxxxxxxxxxxxxx" />
+            <div class="form-help">API Key do Pagar.me (sk_test para sandbox)</div>
+          </div>
+
+          <div style="background:#e0f2fe;border:1px solid #7dd3fc;border-radius:8px;padding:12px;margin-top:12px;">
+            <p style="margin:0;font-size:13px;color:#0c4a6e;">
+              📚 <strong>Luna Checkout + IronPay:</strong><br>
+              • <strong>Luna Checkout</strong> é a plataforma de checkout (checkout.shoptlktok.shop)<br>
+              • <strong>IronPay</strong> já está configurado dentro do Luna (token ativo ✅)<br>
+              • Você só precisa do <strong>Token de Integração do Luna</strong> para conectar seu site<br>
+              • O fluxo é: Seu Site → Luna → IronPay → PIX gerado
+            </p>
+          </div>
+        </div>
+
+        <!-- Campos Asaas -->
+        <div id="fields-asaas" class="gateway-fields" style="display:none;">
+          <div class="form-group">
+            <label class="form-label">API Key <span style="color:#ff2d55;">*</span></label>
+            <input type="password" class="form-input" id="asaas-api-key" placeholder="$aact_xxxxxxxxxxxxxxxxxx" />
+            <div class="form-help">API Key do Asaas</div>
+          </div>
+
+          <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:12px;margin-top:12px;">
+            <p style="margin:0;font-size:13px;color:#9a3412;">
+              📚 <strong>Como obter:</strong><br>
+              1. Acesse <a href="https://www.asaas.com" target="_blank" style="color:#ea580c;">asaas.com</a><br>
+              2. Configurações → Integrações → API Key<br>
+              3. Gere uma nova API Key
+            </p>
+          </div>
+        </div>
+
+        <!-- Campos Personalizado -->
+        <div id="fields-custom" class="gateway-fields" style="display:none;">
+          <div class="form-group">
+            <label class="form-label">URL da API <span style="color:#ff2d55;">*</span></label>
+            <input type="url" class="form-input" id="custom-url" placeholder="https://api.seugateway.com" />
+            <div class="form-help">URL base da sua API customizada</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">API Key/Token <span style="color:#ff2d55;">*</span></label>
+            <input type="password" class="form-input" id="custom-api-key" placeholder="Sua chave de API" />
+            <div class="form-help">Chave de autenticação da API</div>
+          </div>
+        </div>
+
+        <!-- Campos Comuns -->
+        <div id="common-fields" style="display:none;margin-top:20px;">
+          <div class="form-group">
+            <label class="form-label">Webhook URL (Opcional)</label>
+            <input type="url" class="form-input" id="webhook-url" placeholder="https://seusite.com/webhook" />
+            <div class="form-help">URL para receber notificações automáticas de pagamento</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Ambiente</label>
+            <select class="form-input" id="gateway-environment">
+              <option value="production">Produção</option>
+              <option value="sandbox">Sandbox (Teste)</option>
+            </select>
+            <div class="form-help">Ambiente de operação</div>
+          </div>
+        </div>
+
+        <div id="gateway-status" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;margin:20px 0;display:none;">
+          <h3 style="font-size:14px;font-weight:700;margin:0 0 8px 0;color:#166534;">✅ Status da Integração:</h3>
+          <div style="color:#166534;font-size:14px;">
+            <span id="gateway-status-text">❌ Não configurado</span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="saveGatewayConfig()">💾 Salvar Configurações</button>
+        <button class="btn btn-secondary" onclick="testGatewayConnection()" style="margin-left:12px;">🧪 Testar Conexão</button>
+      </div>
+
+      <div class="card" style="margin-top:20px;">
+        <h3 style="font-size:16px;font-weight:700;margin:0 0 12px 0;">📚 Gateways Suportados</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+          <div style="border:2px solid #86efac;border-radius:8px;padding:12px;background:#f0fdf4;">
+            <h4 style="margin:0 0 4px 0;font-size:14px;font-weight:700;color:#166534;">✅ TriboPay</h4>
+            <p style="margin:0;font-size:12px;color:#166534;"><strong>Testado e Funcionando</strong></p>
+            <p style="margin:4px 0 0;font-size:11px;color:#16a34a;">Limite: R$ 1.500,00</p>
+          </div>
+          <div style="border:2px solid #86efac;border-radius:8px;padding:12px;background:#f0fdf4;">
+            <h4 style="margin:0 0 4px 0;font-size:14px;font-weight:700;color:#166534;">✅ Asaas</h4>
+            <p style="margin:0;font-size:12px;color:#166534;"><strong>Testado e Funcionando</strong></p>
+            <p style="margin:4px 0 0;font-size:11px;color:#16a34a;">Sem limite de valor</p>
+          </div>
+          <div style="border:1px solid #e7e9ec;border-radius:8px;padding:12px;">
+            <h4 style="margin:0 0 4px 0;font-size:14px;font-weight:700;">💰 Mercado Pago</h4>
+            <p style="margin:0;font-size:12px;color:#6b7280;">Implementado (pronto para usar)</p>
+          </div>
+          <div style="border:1px solid #e7e9ec;border-radius:8px;padding:12px;">
+            <h4 style="margin:0 0 4px 0;font-size:14px;font-weight:700;">🏦 Vegas PIX</h4>
+            <p style="margin:0;font-size:12px;color:#6b7280;">Disponível</p>
+          </div>
+          <div style="border:1px solid #e7e9ec;border-radius:8px;padding:12px;">
+            <h4 style="margin:0 0 4px 0;font-size:14px;font-weight:700;">🟮 Gerencianet</h4>
+            <p style="margin:0;font-size:12px;color:#6b7280;">Efí - Disponível</p>
+          </div>
+          <div style="border:1px solid #e7e9ec;border-radius:8px;padding:12px;">
+            <h4 style="margin:0 0 4px 0;font-size:14px;font-weight:700;">💳 Pagar.me</h4>
+            <p style="margin:0;font-size:12px;color:#6b7280;">Disponível</p>
+          </div>
+          <div style="border:1px solid #e7e9ec;border-radius:8px;padding:12px;">
+            <h4 style="margin:0 0 4px 0;font-size:14px;font-weight:700;">📊 Asaas</h4>
+            <p style="margin:0;font-size:12px;color:#6b7280;">Gestão financeira completa</p>
+          </div>
+          <div style="border:1px solid #e7e9ec;border-radius:8px;padding:12px;">
+            <h4 style="margin:0 0 4px 0;font-size:14px;font-weight:700;">🔧 Personalizado</h4>
+            <p style="margin:0;font-size:12px;color:#6b7280;">Qualquer API customizada</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <script>
+    // Main script - login functions are in HEAD
+    
+    // Check if already logged in this session
+    window.onload = function() {
+      console.log('Admin page loading...'); // Debug
+      
+      // Check if already logged in
+      if (sessionStorage.getItem('admin_logged_in') === 'true') {
+        console.log('Already logged in, showing admin panel'); // Debug
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('admin-panel').classList.remove('hidden');
+        loadAdminData();
+      } else {
+        console.log('Not logged in, showing login screen'); // Debug
+        // Only load admin data if not logged in (for login screen setup)
+        document.getElementById('login-password').focus();
+      }
+      
+      // Allow Enter key to submit
+      const passwordInput = document.getElementById('login-password');
+      if (passwordInput) {
+        passwordInput.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+            console.log('Enter key pressed, checking password'); // Debug
+            checkPassword();
+          }
+        });
+      }
+    };
+    
+    // Product images handling (multiple)
+    let productImages = [];
+    let allProducts = [];
+    let domainConfig = {
+      baseDomain: '',
+      urlFormat: 'slug',
+      urlPrefix: ''
+    };
+    
+    // Products management
+    function loadProducts() {
+      const saved = localStorage.getItem('all_products');
+      if (saved) {
+        allProducts = JSON.parse(saved);
+      }
+      renderProductsList();
+    }
+    
+    function renderProductsList() {
+      const container = document.getElementById('products-list');
+      
+      // Update products counter
+      const counterEl = document.getElementById('products-counter');
+      if (counterEl) {
+        const count = allProducts.length;
+        counterEl.textContent = count + (count === 1 ? ' produto' : ' produtos');
+        counterEl.style.background = count > 0 ? '#10b981' : '#6b7280';
+      }
+      
+      if (allProducts.length === 0) {
+        container.innerHTML = '<p style="color:#6b7280;text-align:center;padding:40px 0;">Nenhum produto criado ainda. Clique em "Criar Novo Produto" para começar.</p>';
+        return;
+      }
+      
+      container.innerHTML = allProducts.map((product, index) => {
+        const status = product.status || 'em_criacao';
+        const statusBadge = status === 'finalizado' 
+          ? '<span style="background:#10b981;color:#fff;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;">✅ FINALIZADO</span>'
+          : '<span style="background:#f59e0b;color:#fff;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;">⏳ EM CRIAÇÃO</span>';
+        
+        // Use imagePreview or images[0] for thumbnail
+        const imageUrl = (product.images && product.images[0]) || product.imagePreview || '';
+        
+        return `
+        <div class="product-item">
+          <img src="${imageUrl}" class="product-item-image" alt="${product.name}" />
+          <div class="product-item-info">
+            <div class="product-item-name">${product.name} ${statusBadge}</div>
+            <div class="product-item-price">R$ ${product.price.toFixed(2).replace('.', ',')}</div>
+            <div style="font-size:11px;color:#6b7280;margin:4px 0;">ID: ${product.id}</div>
+            ${product.generatedUrl ? 
+              '<div class="product-item-link" style="color:#10b981;font-weight:600;">🔗 ' + product.generatedUrl + '</div>' : 
+              '<div class="product-item-link" style="color:#f59e0b;">⚠️ Não finalizado - URL será gerada</div>'
+            }
+          </div>
+          <div class="product-item-actions">
+            ${status === 'finalizado' ? 
+              '<button class="btn btn-success" onclick="copyProductLink(\'' + product.generatedUrl + '\')">📋 Copiar URL</button>' +
+              '<button class="btn btn-secondary" onclick="window.open(\'' + product.generatedUrl + '\', \'_blank\')">🔗 Abrir</button>'
+            : ''}
+            <button class="btn btn-secondary" onclick="editProduct(${index})">✏️ Editar</button>
+            <button class="btn btn-danger" onclick="deleteProduct(${index})">🗑️ Excluir</button>
+          </div>
+        </div>
+      `;
+      }).join('');
+    }
+    
+    function clearProductForm() {
+      // Clear form for new product
+      window.currentEditingProductIndex = undefined;
+      
+      document.getElementById('product-name').value = '';
+      document.getElementById('product-url').value = '';
+      document.getElementById('product-price').value = '0';
+      document.getElementById('product-old-price').value = '0';
+      document.getElementById('product-rating').value = '5';
+      document.getElementById('product-sold').value = '0';
+      
+      // Clear images
+      productImages = [];
+      displayProductImagesPreview();
+      
+      // Reset shipping
+      document.getElementById('shipping-days-min').value = '2';
+      document.getElementById('shipping-days-max').value = '6';
+      document.getElementById('shipping-old-fee').value = '33.40';
+      document.getElementById('shipping-new-fee').value = '13.40';
+      document.getElementById('shipping-discount-text').value = 'Desconto de R$ 20 no frete em pedidos acima de R$ 29';
+      
+      // Reset IronPay hashes
+      document.getElementById('product-offer-hash').value = '';
+      document.getElementById('product-product-hash').value = '';
+      
+      alert('Formulário limpo! Preencha os dados do novo produto e clique em "Salvar Produto".');
+    }
+    
+    function editProduct(index) {
+      const product = allProducts[index];
+      
+      // Load product data into form
+      document.getElementById('product-name').value = product.name;
+      document.getElementById('product-url').value = product.url || '';
+      document.getElementById('product-price').value = product.price;
+      document.getElementById('product-old-price').value = product.oldPrice;
+      document.getElementById('product-rating').value = product.rating;
+      document.getElementById('product-sold').value = product.sold;
+      
+      if (product.images) {
+        productImages = product.images;
+        displayProductImagesPreview();
+      }
+      
+      if (product.shipping) {
+        document.getElementById('shipping-days-min').value = product.shipping.daysMin;
+        document.getElementById('shipping-days-max').value = product.shipping.daysMax;
+        document.getElementById('shipping-old-fee').value = product.shipping.oldFee;
+        document.getElementById('shipping-new-fee').value = product.shipping.newFee;
+        document.getElementById('shipping-discount-text').value = product.shipping.discountText;
+      }
+      
+      // Load IronPay hashes if available
+      if (product.ironpay) {
+        document.getElementById('product-offer-hash').value = product.ironpay.offerHash || '';
+        document.getElementById('product-product-hash').value = product.ironpay.productHash || '';
+      } else {
+        // Clear hash fields if product doesn't have them
+        document.getElementById('product-offer-hash').value = '';
+        document.getElementById('product-product-hash').value = '';
+      }
+      
+      // Store current editing index
+      window.currentEditingProductIndex = index;
+      
+      // Switch to product tab
+      switchTab('produto');
+    }
+    
+    function deleteProduct(index) {
+      if (!confirm('Deseja realmente excluir este produto?')) return;
+      
+      const product = allProducts[index];
+      allProducts.splice(index, 1);
+      saveProducts();
+      renderProductsList();
+      
+      alert(`Produto excluído! Lembre-se de deletar o arquivo produto-${product.id}.html manualmente do servidor.`);
+    }
+    
+    function saveProducts() {
+      // Create lightweight version without heavy base64 images
+      const lightweightProducts = allProducts.map(product => {
+        const light = { ...product };
+        
+        // Keep only first image URL for preview, remove full base64
+        if (light.images && light.images.length > 0) {
+          light.imagePreview = light.images[0].substring(0, 100); // First 100 chars for preview
+          // Don't save full images array in list to save space
+          delete light.images;
+        }
+        
+        return light;
+      });
+      
+      try {
+        localStorage.setItem('all_products', JSON.stringify(lightweightProducts));
+        console.log('✅ Lista de produtos salva (' + lightweightProducts.length + ' produtos)');
+      } catch (e) {
+        console.error('❌ Erro ao salvar lista:', e.message);
+        alert('⚠️ Erro: Lista de produtos muito grande. Considere usar menos produtos ou imagens menores.');
+      }
+    }
+    
+    function copyProductLink(url) {
+      navigator.clipboard.writeText(url).then(() => {
+        alert('Link copiado: ' + url);
+      }).catch(() => {
+        prompt('Copie o link:', url);
+      });
+    }
+    
+    // Download function temporarily removed to fix page rendering issue
+    
+    // Domain management
+    function saveDomain() {
+      domainConfig = {
+        baseDomain: document.getElementById('base-domain').value.trim(),
+        urlFormat: document.getElementById('url-format').value,
+        urlPrefix: document.getElementById('url-prefix').value.trim()
+      };
+      
+      localStorage.setItem('domain_config', JSON.stringify(domainConfig));
+      
+      // Update all product URLs
+      updateAllProductUrls();
+      
+      showSuccess();
+    }
+    
+    function loadDomain() {
+      const saved = localStorage.getItem('domain_config');
+      if (saved) {
+        domainConfig = JSON.parse(saved);
+        document.getElementById('base-domain').value = domainConfig.baseDomain || '';
+        document.getElementById('url-format').value = domainConfig.urlFormat || 'slug';
+        document.getElementById('url-prefix').value = domainConfig.urlPrefix || '';
+        updateUrlPreview();
+      }
+    }
+    
+    function generateProductUrl(product) {
+      if (!domainConfig.baseDomain) {
+        return `produto-${product.id}.html`;
+      }
+      
+      let base = domainConfig.baseDomain.replace(/\/$/, ''); // Remove trailing slash
+      let path = '';
+      
+      if (domainConfig.urlPrefix) {
+        path += '/' + domainConfig.urlPrefix;
+      }
+      
+      if (domainConfig.urlFormat === 'slug') {
+        // Convert product name to slug
+        const slug = product.name
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '') // Remove accents
+          .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric with dash
+          .replace(/^-+|-+$/g, ''); // Remove leading/trailing dashes
+        path += '/' + slug;
+      } else if (domainConfig.urlFormat === 'id') {
+        path += '/produto-' + product.id;
+      }
+      
+      return base + path + '.html';
+    }
+    
+    function updateAllProductUrls() {
+      allProducts.forEach(product => {
+        product.url = generateProductUrl(product);
+      });
+      saveProducts();
+      renderProductsList();
+    }
+    
+    function updateUrlPreview() {
+      const exampleProduct = {
+        id: 123456,
+        name: 'Patinete Elétrico Scooter'
+      };
+      
+      const previewUrl = generateProductUrl(exampleProduct);
+      document.getElementById('url-preview').textContent = previewUrl;
+    }
+    
+    // Add event listeners for real-time preview
+    function setupDomainPreview() {
+      ['base-domain', 'url-format', 'url-prefix'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('input', () => {
+            domainConfig.baseDomain = document.getElementById('base-domain').value.trim();
+            domainConfig.urlFormat = document.getElementById('url-format').value;
+            domainConfig.urlPrefix = document.getElementById('url-prefix').value.trim();
+            updateUrlPreview();
+          });
+        }
+      });
+    }
+    
+    function loadAdminData() {
+      // Initialize editing index
+      window.currentEditingProductIndex = undefined;
+      
+      // Load domain config
+      loadDomain();
+      
+      // Load products list
+      loadProducts();
+      
+      // Load all initial data
+      loadInitialProductData();
+      
+      // Load Vegas configuration
+      loadVegasConfig();
+      
+      // Setup domain preview listeners
+      setTimeout(() => {
+        setupDomainPreview();
+      }, 100);
+    }
+
+    function handleProductImagesUpload(event) {
+      const files = Array.from(event.target.files);
+      console.log('Uploading images:', files.length, 'files'); // Debug
+      
+      if (productImages.length + files.length > 9) {
+        alert('Máximo de 9 imagens permitidas');
+        return;
+      }
+      
+      files.forEach(file => {
+        console.log('Processing file:', file.name, file.size, 'bytes'); // Debug
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          console.log('Image loaded, size:', e.target.result.length, 'chars'); // Debug
+          productImages.push(e.target.result);
+          displayProductImagesPreview();
+          console.log('Total images now:', productImages.length); // Debug
+        };
+        reader.onerror = function(e) {
+          console.error('Error reading file:', e); // Debug
+          alert('Erro ao carregar imagem: ' + file.name);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function displayProductImagesPreview() {
+      const preview = document.getElementById('product-images-preview');
+      preview.innerHTML = productImages.map((url, index) => `
+        <div class="image-preview-item">
+          <img src="${url}" alt="Preview ${index + 1}" />
+          <button class="image-preview-remove" onclick="removeProductImage(${index})">×</button>
+        </div>
+      `).join('');
+    }
+
+    function removeProductImage(index) {
+      productImages.splice(index, 1);
+      displayProductImagesPreview();
+    }
+
+    // Store logo upload handling
+    function handleStoreLogoUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const imageUrl = e.target.result;
+          document.getElementById('store-logo').value = imageUrl;
+          displayStoreLogoPreview(imageUrl);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function displayStoreLogoPreview(url) {
+      const preview = document.getElementById('store-logo-preview');
+      preview.innerHTML = `
+        <div class="image-preview-item">
+          <img src="${url}" alt="Logo Preview" />
+          <button class="image-preview-remove" onclick="removeStoreLogo()">×</button>
+        </div>
+      `;
+    }
+
+    function removeStoreLogo() {
+      document.getElementById('store-logo').value = '';
+      document.getElementById('store-logo-preview').innerHTML = '';
+      document.getElementById('store-logo-file').value = '';
+    }
+
+    // Switch between tabs
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('tab-' + tabName).classList.add('active');
+    }
+
+    // Show success message
+    function showSuccess() {
+      const msg = document.getElementById('success-message');
+      msg.classList.add('show');
+      setTimeout(() => msg.classList.remove('show'), 3000);
+    }
+
+    // Save Product
+    function saveProduct() {
+      console.log('Saving product with', productImages.length, 'images'); // Debug
+      
+      const data = {
+        name: document.getElementById('product-name').value,
+        url: document.getElementById('product-url').value,
+        price: parseFloat(document.getElementById('product-price').value),
+        oldPrice: parseFloat(document.getElementById('product-old-price').value),
+        images: productImages, // Array of images
+        image: productImages[0] || '', // First image as main
+        rating: parseFloat(document.getElementById('product-rating').value),
+        sold: document.getElementById('product-sold').value,
+        shipping: {
+          daysMin: parseInt(document.getElementById('shipping-days-min').value),
+          daysMax: parseInt(document.getElementById('shipping-days-max').value),
+          oldFee: parseFloat(document.getElementById('shipping-old-fee').value),
+          newFee: parseFloat(document.getElementById('shipping-new-fee').value),
+          discountText: document.getElementById('shipping-discount-text').value
+        },
+        // IronPay Integration: Hashes únicos por produto
+        ironpay: {
+          offerHash: document.getElementById('product-offer-hash').value.trim(),
+          productHash: document.getElementById('product-product-hash').value.trim()
+        }
+      };
+      
+      // Generate unique ID if doesn't exist
+      if (!data.id) {
+        data.id = Date.now();
+      }
+      
+      console.log('Product data to save:', data); // Debug
+      console.log('🆔 Product ID:', data.id);
+      console.log('🔍 IronPay hashes salvando:');
+      console.log('   Offer Hash:', data.ironpay.offerHash || 'VAZIO');
+      console.log('   Product Hash:', data.ironpay.productHash || 'VAZIO');
+      
+      // Save to main product (active product)
+      localStorage.setItem('product_data', JSON.stringify(data));
+      
+      // Save product ID as current
+      localStorage.setItem('current_product_id', data.id);
+      
+      console.log('✅ Produto salvo - ID:', data.id, 'Nome:', data.name);
+      
+      // Add or update in all_products array
+      const existingIndex = allProducts.findIndex(p => p.id === data.id);
+      
+      if (existingIndex >= 0) {
+        // Product exists - update it
+        console.log('🔄 Atualizando produto existente:', data.name);
+        allProducts[existingIndex] = {
+          ...allProducts[existingIndex],
+          ...data
+        };
+      } else {
+        // New product - add to list
+        console.log('➕ Adicionando novo produto:', data.name);
+        allProducts.push(data);
+      }
+      
+      // Save and render
+      saveProducts();
+      renderProductsList();
+      
+      // Clear editing index
+      window.currentEditingProductIndex = undefined;
+      
+      showSuccess();
+    }
+
+    // Finalize Product - Generate URL and mark as finalized
+    function finalizeProduct() {
+      // First save the product
+      saveProduct();
+      
+      // Get current product data
+      const productData = JSON.parse(localStorage.getItem('product_data') || '{}');
+      
+      // Generate unique ID if doesn't exist
+      if (!productData.id) {
+        productData.id = Date.now();
+      }
+      
+      // Generate URL based on domain config or use default
+      let baseDomain = domainConfig.baseDomain || window.location.origin;
+      // Remove trailing slash if exists
+      baseDomain = baseDomain.replace(/\/$/, '');
+      const productUrl = `${baseDomain}/index.html?produto=${productData.id}`;
+      
+      console.log('🔗 URL gerada:', productUrl);
+      console.log('🆔 Product ID:', productData.id);
+      
+      // Update product with status and URL
+      productData.status = 'finalizado';
+      productData.url = productUrl;
+      productData.generatedUrl = productUrl;
+      productData.finalizedAt = new Date().toISOString();
+      
+      // Save updated data
+      localStorage.setItem('product_data', JSON.stringify(productData));
+      
+      // Update product in all_products array
+      const existingIndex = allProducts.findIndex(p => p.id === productData.id);
+      if (existingIndex >= 0) {
+        allProducts[existingIndex] = productData;
+        saveProducts();
+        renderProductsList();
+        console.log('✅ Produto atualizado na lista');
+      } else {
+        console.warn('⚠️ Produto não encontrado na lista para atualizar');
+      }
+      
+      // Update UI
+      document.getElementById('product-status').value = 'finalizado';
+      document.getElementById('product-generated-url').value = productUrl;
+      document.getElementById('product-url-container').style.display = 'block';
+      document.getElementById('finalize-btn').textContent = '✅ Produto Finalizado';
+      document.getElementById('finalize-btn').disabled = true;
+      document.getElementById('finalize-btn').style.opacity = '0.6';
+      
+      alert(`✅ Produto finalizado com sucesso!\n\nURL gerada:\n${productUrl}\n\nAgora você pode:\n• Copiar a URL\n• Abrir no navegador`);
+      
+      showSuccess();
+    }
+
+    // Copy generated URL
+    function copyGeneratedUrl() {
+      const url = document.getElementById('product-generated-url').value;
+      navigator.clipboard.writeText(url).then(() => {
+        alert('✅ URL copiada: ' + url);
+      }).catch(() => {
+        prompt('Copie a URL:', url);
+      });
+    }
+
+    // Open product URL in new tab
+    function openProductUrl() {
+      const url = document.getElementById('product-generated-url').value;
+      if (url) {
+        window.open(url, '_blank');
+      }
+    }
+
+    
+    /* OLD BROKEN CODE REMOVED - WAS CAUSING TEMPLATE LITERAL ERRORS
+    function OLD_BROKEN_CODE() {
+      return 'REMOVED
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Finalizar Pedido - ${product.name}</title>
+  <style>
+    :root { --pink: #ff2d55; --pink-dark: #e02649; --gray-text: #1f2328; }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; color: #111; background: #f3f4f6; overflow-x: hidden; }
+    .app { width: 100%; max-width: 420px; margin: 0 auto; background: #fff; min-height: 100dvh; position: relative; display: flex; flex-direction: column; }
+    .header { display:flex; align-items:center; gap:12px; padding: 14px 12px; border-bottom:1px solid #eef0f3; background:#fff; }
+    .back-btn { width:32px; height:32px; display:grid; place-items:center; background:transparent; border:0; color:#111; cursor:pointer; }
+    .header-title { font-weight:700; font-size:16px; color:var(--gray-text); }
+    .content { flex:1; padding:16px 12px 100px; }
+    .section-title { font-weight:800; font-size:18px; color:var(--gray-text); text-align:center; margin-bottom:20px; }
+    .product-summary { display:flex; gap:12px; padding:12px; background:#fff; border:1px solid #eef0f3; border-radius:12px; margin-bottom:20px; }
+    .product-img { width:80px; height:80px; border-radius:8px; object-fit:cover; background:#f6f7f9; }
+    .product-info { flex:1; }
+    .product-name { font-size:14px; color:var(--gray-text); line-height:1.3; margin-bottom:8px; }
+    .product-price { font-weight:800; font-size:18px; color:var(--pink); }
+    .product-unit { font-size:13px; color:#6b7280; }
+    .quantity-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+    .quantity-label { font-weight:600; color:var(--gray-text); }
+    .quantity-controls { display:flex; align-items:center; gap:12px; }
+    .qty-btn { width:32px; height:32px; border:1px solid #e7e9ec; background:#fff; border-radius:6px; font-size:18px; cursor:pointer; }
+    .qty-value { font-weight:600; min-width:30px; text-align:center; }
+    .subtotal-row { display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #eef0f3; margin-bottom:20px; }
+    .subtotal-label { color:#6b7280; }
+    .subtotal-value { font-weight:700; font-size:16px; color:var(--gray-text); }
+    .form-section { margin-bottom:24px; }
+    .form-title { font-weight:700; font-size:16px; color:var(--gray-text); margin-bottom:12px; }
+    .form-group { margin-bottom:16px; }
+    .form-label { display:block; font-size:14px; font-weight:600; color:var(--gray-text); margin-bottom:6px; }
+    .form-label .required { color:var(--pink); }
+    .form-input { width:100%; padding:12px; border:1px solid #e7e9ec; border-radius:8px; font-size:14px; }
+    .form-input:focus { outline:none; border-color:var(--pink); }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .shipping-section { margin-bottom:24px; }
+    .shipping-option { display:flex; align-items:center; gap:12px; padding:14px; border:2px solid #e7e9ec; border-radius:12px; margin-bottom:12px; cursor:pointer; transition:all 0.2s; }
+    .shipping-option.selected { border-color:var(--pink); background:#fff0f3; }
+    .shipping-radio { width:20px; height:20px; border:2px solid #d1d5db; border-radius:50%; position:relative; }
+    .shipping-option.selected .shipping-radio { border-color:var(--pink); }
+    .shipping-option.selected .shipping-radio::after { content:''; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:10px; height:10px; background:var(--pink); border-radius:50%; }
+    .shipping-details { flex:1; }
+    .shipping-name { font-weight:700; font-size:14px; color:var(--gray-text); }
+    .shipping-time { font-size:13px; color:#6b7280; }
+    .shipping-price { font-weight:700; font-size:16px; color:#10b981; }
+    .total-section { padding:16px 0; border-top:1px solid #eef0f3; margin-bottom:20px; }
+    .total-row { display:flex; justify-content:space-between; align-items:center; }
+    .total-label { font-weight:700; font-size:16px; color:var(--gray-text); }
+    .total-value { font-weight:800; font-size:22px; color:var(--pink); }
+    .footer-buttons { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:420px; background:#fff; border-top:1px solid #eef0f3; padding:12px; display:flex; gap:12px; }
+    .btn { flex:1; height:48px; border:0; border-radius:12px; font-weight:700; font-size:15px; cursor:pointer; }
+    .btn-back { background:#f1f2f4; color:var(--gray-text); }
+    .btn-continue { background:var(--pink); color:#fff; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <button class="back-btn" onclick="history.back()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <h1 class="header-title">Finalizar Pedido</h1>
+    </header>
+    <main class="content">
+      <h2 class="section-title">Finalizar Pedido</h2>
+      <div class="product-summary">
+        <img class="product-img" src="${product.images?.[0] || ''}" alt="${product.name}" />
+        <div class="product-info">
+          <div class="product-name">${product.name}</div>
+          <div><span class="product-price">R$ ${priceFormatted}</span><span class="product-unit">/unidade</span></div>
+        </div>
+      </div>
+      <div class="quantity-row">
+        <span class="quantity-label">Quantidade:</span>
+        <div class="quantity-controls">
+          <button class="qty-btn" onclick="updateQty(-1)">−</button>
+          <span class="qty-value" id="qty">1</span>
+          <button class="qty-btn" onclick="updateQty(1)">+</button>
+        </div>
+      </div>
+      <div class="subtotal-row">
+        <span class="subtotal-label">Subtotal (1 item):</span>
+        <span class="subtotal-value" id="subtotal">R$ ${priceFormatted}</span>
+      </div>
+      <div class="form-section">
+        <h3 class="form-title">Dados Pessoais</h3>
+        <div class="form-group">
+          <label class="form-label">Nome Completo <span class="required">*</span></label>
+          <input type="text" class="form-input" placeholder="Seu nome completo" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">E-mail <span class="required">*</span></label>
+          <input type="email" class="form-input" placeholder="seu@email.com" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Telefone <span class="required">*</span></label>
+            <input type="tel" class="form-input" placeholder="(00) 00000-0000" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">CPF <span class="required">*</span></label>
+            <input type="text" class="form-input" placeholder="000.000.000-00" />
+          </div>
+        </div>
+      </div>
+      <div class="shipping-section">
+        <h3 class="form-title">Escolha o Frete</h3>
+        <div class="shipping-option selected">
+          <div class="shipping-radio"></div>
+          <div class="shipping-details">
+            <div class="shipping-name">Frete Grátis</div>
+            <div class="shipping-time">Entrega em 8 a 10 dias</div>
+          </div>
+          <div class="shipping-price">Grátis</div>
+        </div>
+      </div>
+      <div class="total-section">
+        <div class="total-row">
+          <span class="total-label">Total com Frete:</span>
+          <span class="total-value" id="total">R$ ${priceFormatted}</span>
+        </div>
+      </div>
+    </main>
+    <div class="footer-buttons">
+      <button class="btn btn-back" onclick="history.back()">Voltar</button>
+      <button class="btn btn-continue" onclick="window.location.href='pagamento${product.id}.html'">Continuar para Pagamento</button>
+    </div>
+  </div>
+  <script>
+    let qty = 1;
+    const basePrice = ${product.price || 0};
+    function updateQty(change) {
+      qty = Math.max(1, qty + change);
+      document.getElementById('qty').textContent = qty;
+      const subtotal = basePrice * qty;
+      document.getElementById('subtotal').textContent = 'R$ ' + subtotal.toFixed(2).replace('.', ',');
+      document.getElementById('total').textContent = 'R$ ' + subtotal.toFixed(2).replace('.', ',');
+    }
+  REMOVED CONTENT
+    }
+    END OF BROKEN CODE */
+    
+    // Load product status on page load
+    function loadProductStatus() {
+      const productData = JSON.parse(localStorage.getItem('product_data') || '{}');
+      
+      if (productData.status === 'finalizado' && productData.generatedUrl) {
+        document.getElementById('product-status').value = 'finalizado';
+        document.getElementById('product-generated-url').value = productData.generatedUrl;
+        document.getElementById('product-url-container').style.display = 'block';
+        document.getElementById('finalize-btn').textContent = '✅ Produto Finalizado';
+        document.getElementById('finalize-btn').disabled = true;
+        document.getElementById('finalize-btn').style.opacity = '0.6';
+      } else {
+        document.getElementById('product-status').value = 'em_criacao';
+      }
+    }
+
+    // Save Store
+    function saveStore() {
+      const data = {
+        name: document.getElementById('store-name').value,
+        logo: document.getElementById('store-logo').value,
+        sales: document.getElementById('store-sales').value
+      };
+      localStorage.setItem('store_data', JSON.stringify(data));
+      showSuccess();
+    }
+
+    // Save Description
+    function saveDescription() {
+      const description = document.getElementById('product-description').value;
+      localStorage.setItem('product_description', description);
+      showSuccess();
+    }
+
+
+    // Save Payment
+    function savePayment() {
+      const data = {
+        qrcodeUrl: document.getElementById('pix-qrcode-url').value,
+        pixCode: document.getElementById('pix-code').value,
+        confirmationUrl: document.getElementById('confirmation-url').value
+      };
+      localStorage.setItem('payment_data', JSON.stringify(data));
+      showSuccess();
+    }
+
+    // Save Vegas Gateway Configuration
+    function saveVegasConfig() {
+      const apiKey = document.getElementById('vegas-api-key').value.trim();
+      
+      if (!apiKey) {
+        alert('⚠️ Por favor, preencha a API Key');
+        return;
+      }
+      
+      const data = {
+        provider: 'vegas',
+        apiKey: apiKey,
+        clientSecret: apiKey, // Vegas usa API Key como clientSecret
+        baseUrl: document.getElementById('vegas-domain').value,
+        webhookUrl: document.getElementById('vegas-webhook-url').value.trim(),
+        environment: document.getElementById('vegas-environment').value
+      };
+      
+      localStorage.setItem('gateway_config', JSON.stringify(data));
+      updateVegasStatus();
+      showSuccess();
+      alert('✅ Configurações do Gateway Vegas salvas com sucesso!\n\nAgora os QR Codes PIX serão gerados automaticamente.');
+    }
+
+    // Load Vegas Configuration
+    function loadVegasConfig() {
+      const saved = localStorage.getItem('gateway_config');
+      if (saved) {
+        const data = JSON.parse(saved);
+        if (data.provider === 'vegas') {
+          document.getElementById('vegas-api-key').value = data.apiKey || '';
+          document.getElementById('vegas-webhook-url').value = data.webhookUrl || '';
+          document.getElementById('vegas-environment').value = data.environment || 'production';
+          updateVegasStatus();
+        }
+      }
+    }
+
+    // Update Vegas Status Display
+    function updateVegasStatus(isConnected = null) {
+      const config = JSON.parse(localStorage.getItem('gateway_config') || '{}');
+      const statusText = document.getElementById('vegas-status-text');
+      const statusDiv = document.getElementById('vegas-status');
+      
+      if (!config.apiKey || config.provider !== 'vegas') {
+        statusText.textContent = '❌ Não configurado';
+        statusDiv.style.color = '#dc2626';
+        statusDiv.parentElement.style.background = '#fef2f2';
+        statusDiv.parentElement.style.borderColor = '#fecaca';
+      } else if (isConnected === true) {
+        statusText.textContent = '✅ Conectado e funcionando';
+        statusDiv.style.color = '#166534';
+        statusDiv.parentElement.style.background = '#f0fdf4';
+        statusDiv.parentElement.style.borderColor = '#bbf7d0';
+      } else if (isConnected === false) {
+        statusText.textContent = '⚠️ Configurado mas com erro de conexão';
+        statusDiv.style.color = '#b45309';
+        statusDiv.parentElement.style.background = '#fffbeb';
+        statusDiv.parentElement.style.borderColor = '#fde68a';
+      } else {
+        statusText.textContent = '⚙️ Configurado (clique em "Testar Conexão")';
+        statusDiv.style.color = '#166534';
+        statusDiv.parentElement.style.background = '#f0fdf4';
+        statusDiv.parentElement.style.borderColor = '#bbf7d0';
+      }
+    }
+
+    // Test Vegas Connection
+    async function testVegasConnection() {
+      const config = JSON.parse(localStorage.getItem('gateway_config') || '{}');
+      
+      if (!config.apiKey || config.provider !== 'vegas') {
+        alert('⚠️ Configure a API Key primeiro');
+        return;
+      }
+      
+      const btn = event.target;
+      const originalText = btn.textContent;
+      btn.textContent = 'Testando...';
+      btn.disabled = true;
+      
+      try {
+        // Teste simples: tentar criar um checkout de teste
+        const baseUrl = document.getElementById('vegas-domain').value;
+        const response = await fetch(`${baseUrl}/checkout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'api-key': config.apiKey
+          },
+          body: JSON.stringify({
+            customer: {
+              name: "Teste",
+              email: "teste@teste.com",
+              document: "00000000000",
+              phone: "+5511999999999",
+              address: {
+                street: "Rua Teste",
+                number: "1",
+                district: "Centro",
+                city: "São Paulo",
+                state: "SP",
+                zipcode: "01310000"
+              }
+            },
+            payment: {
+              method: "pix",
+              payment_value: 100,
+              freight_value: 0,
+              discount_value: 0,
+              external_code: "TEST" + Date.now(),
+              currency: "BRL"
+            },
+            products: [{
+              name: "Produto Teste",
+              price: 100,
+              quantity: 1,
+              code: "TEST001",
+              is_digital: false,
+              description: "Teste de conexão"
+            }],
+            notification_url: config.webhookUrl || "",
+            src: "admin_test"
+          })
+        });
+        
+        if (response.ok) {
+          alert('✅ Conexão com Vegas estabelecida com sucesso!\n\nA integração está funcionando corretamente.');
+          updateVegasStatus(true);
+        } else {
+          const error = await response.json();
+          throw new Error(error.message || 'API Key inválida ou erro na requisição');
+        }
+      } catch (error) {
+        alert('❌ Erro ao conectar com Vegas:\n\n' + error.message + '\n\nVerifique sua API Key.');
+        updateVegasStatus(false);
+      } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    // Reviews management
+    let reviews = [];
+
+    function loadReviews() {
+      const saved = localStorage.getItem('product_reviews');
+      if (saved) {
+        reviews = JSON.parse(saved);
+      } else {
+        reviews = []; // Começar sem reviews - apenas as criadas no painel
+      }
+      renderReviewsList();
+    }
+
+    function renderReviewsList() {
+      const container = document.getElementById('reviews-list');
+      container.innerHTML = reviews.map((review, index) => {
+        const avatar = review.avatar ? '<img src="' + review.avatar + '" style="width:32px;height:32px;border-radius:50%;vertical-align:middle;margin-right:8px;" />' : '';
+        const stars = '★'.repeat(review.rating) + '☆'.repeat(5-review.rating);
+        const photos = review.photos && review.photos.length > 0 
+          ? '<div style="display:flex;gap:8px;margin-top:8px;">' + review.photos.map(photo => '<img src="' + photo + '" style="width:80px;height:80px;border-radius:8px;object-fit:cover;" />').join('') + '</div>'
+          : '';
+        
+        return '<div class="review-item"><div class="review-item-header"><div>' + avatar + 
+               '<strong>' + review.name + ' - ' + stars + '</strong></div>' +
+               '<div class="review-item-actions">' +
+               '<button class="btn btn-secondary" onclick="editReview(' + index + ')">Editar</button>' +
+               '<button class="btn btn-danger" onclick="deleteReview(' + index + ')">Excluir</button>' +
+               '</div></div><p>' + review.text + '</p>' + photos + '</div>';
+      }).join('');
+    }
+
+    function addReview() {
+      openReviewModal();
+    }
+
+    function editReview(index) {
+      openReviewModal(index);
+    }
+
+    let currentReviewIndex = null;
+    let tempReviewPhotos = [];
+    let tempReviewAvatar = '';
+
+    function openReviewModal(index = null) {
+      currentReviewIndex = index;
+      const review = index !== null ? reviews[index] : null;
+      
+      tempReviewPhotos = review ? [...review.photos] : [];
+      tempReviewAvatar = review ? review.avatar || '' : '';
+      
+      const modal = document.createElement('div');
+      modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
+      
+      const modalTitle = index !== null ? 'Editar' : 'Adicionar';
+      const reviewName = review ? review.name : '';
+      const reviewRating = review ? review.rating : 5;
+      const reviewText = review ? review.text : '';
+      
+      modal.innerHTML = '<div style="background:#fff;border-radius:12px;padding:24px;max-width:600px;width:90%;max-height:90vh;overflow-y:auto;">' +
+        '<h3 style="margin-top:0;">' + modalTitle + ' Avaliação</h3>' +
+        '<div style="margin-bottom:16px;">' +
+        '<label style="display:block;font-weight:600;margin-bottom:8px;">Avatar do Cliente</label>' +
+        '<div class="upload-area" onclick="document.getElementById(\'review-avatar-file\').click()" style="padding:16px;">' +
+        '<div style="font-size:14px;">Clique para fazer upload do avatar</div></div>' +
+        '<input type="file" id="review-avatar-file" accept="image/*" style="display:none;" />' +
+        '<div id="review-avatar-preview" style="margin-top:12px;"></div></div>' +
+        '<div style="margin-bottom:16px;">' +
+        '<label style="display:block;font-weight:600;margin-bottom:8px;">Nome do Cliente</label>' +
+        '<input type="text" id="review-name" value="' + reviewName + '" style="width:100%;padding:12px;border:1px solid #e7e9ec;border-radius:8px;" /></div>' +
+        '<div style="margin-bottom:16px;">' +
+        '<label style="display:block;font-weight:600;margin-bottom:8px;">Avaliação (1-5)</label>' +
+        '<input type="number" id="review-rating" value="' + reviewRating + '" min="1" max="5" style="width:100%;padding:12px;border:1px solid #e7e9ec;border-radius:8px;" /></div>' +
+        '<div style="margin-bottom:16px;">' +
+        '<label style="display:block;font-weight:600;margin-bottom:8px;">Texto da Avaliação</label>' +
+        '<textarea id="review-text" rows="4" style="width:100%;padding:12px;border:1px solid #e7e9ec;border-radius:8px;font-family:inherit;">' + reviewText + '</textarea></div>' +
+        '<div style="margin-bottom:16px;">' +
+        '<label style="display:block;font-weight:600;margin-bottom:8px;">Fotos do Produto</label>' +
+        '<div class="upload-area" onclick="document.getElementById(\'review-photos-file\').click()" style="padding:16px;">' +
+        '<div style="font-size:14px;">Clique para adicionar fotos</div></div>' +
+        '<input type="file" id="review-photos-file" accept="image/*" multiple style="display:none;" />' +
+        '<div id="review-photos-preview" style="display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;"></div></div>' +
+        '<div style="display:flex;gap:12px;justify-content:flex-end;">' +
+        '<button onclick="closeReviewModal()" class="btn btn-secondary">Cancelar</button>' +
+        '<button onclick="saveReviewFromModal()" class="btn btn-primary">Salvar</button></div></div>';
+      
+      document.body.appendChild(modal);
+      modal.id = 'review-modal';
+      
+      // Setup avatar upload
+      document.getElementById('review-avatar-file').onchange = function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            tempReviewAvatar = event.target.result;
+            displayReviewAvatarPreview();
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+      
+      // Setup photos upload
+      document.getElementById('review-photos-file').onchange = function(e) {
+        Array.from(e.target.files).forEach(file => {
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            tempReviewPhotos.push(event.target.result);
+            displayReviewPhotosPreview();
+          };
+          reader.readAsDataURL(file);
+        });
+      };
+      
+      displayReviewAvatarPreview();
+      displayReviewPhotosPreview();
+    }
+
+    function displayReviewAvatarPreview() {
+      const preview = document.getElementById('review-avatar-preview');
+      if (tempReviewAvatar) {
+        preview.innerHTML = '<div style="position:relative;width:80px;height:80px;">' +
+          '<img src="' + tempReviewAvatar + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;border:1px solid #e7e9ec;" />' +
+          '<button onclick="removeReviewAvatar()" style="position:absolute;top:0;right:0;width:24px;height:24px;background:#ef4444;border:0;border-radius:50%;color:#fff;cursor:pointer;">×</button>' +
+          '</div>';
+      } else {
+        preview.innerHTML = '';
+      }
+    }
+
+    function displayReviewPhotosPreview() {
+      const preview = document.getElementById('review-photos-preview');
+      preview.innerHTML = tempReviewPhotos.map((photo, idx) =>
+        '<div style="position:relative;width:100px;height:100px;">' +
+        '<img src="' + photo + '" style="width:100%;height:100%;border-radius:8px;object-fit:cover;border:1px solid #e7e9ec;" />' +
+        '<button onclick="removeReviewPhoto(' + idx + ')" style="position:absolute;top:4px;right:4px;width:24px;height:24px;background:#ef4444;border:0;border-radius:50%;color:#fff;cursor:pointer;">×</button>' +
+        '</div>'
+      ).join('');
+    }
+
+    function removeReviewAvatar() {
+      tempReviewAvatar = '';
+      displayReviewAvatarPreview();
+    }
+
+    function removeReviewPhoto(index) {
+      tempReviewPhotos.splice(index, 1);
+      displayReviewPhotosPreview();
+    }
+
+    function saveReviewFromModal() {
+      const name = document.getElementById('review-name').value;
+      const rating = parseInt(document.getElementById('review-rating').value);
+      const text = document.getElementById('review-text').value;
+      
+      if (!name || !rating || !text) {
+        alert('Preencha todos os campos obrigatórios');
+        return;
+      }
+      
+      const reviewData = {
+        name,
+        rating,
+        item: 'Padrão',
+        text,
+        avatar: tempReviewAvatar,
+        photos: tempReviewPhotos
+      };
+      
+      if (currentReviewIndex !== null) {
+        reviews[currentReviewIndex] = reviewData;
+      } else {
+        reviews.push(reviewData);
+      }
+      
+      saveReviews();
+      renderReviewsList();
+      closeReviewModal();
+    }
+
+    function closeReviewModal() {
+      const modal = document.getElementById('review-modal');
+      if (modal) {
+        modal.remove();
+      }
+      tempReviewPhotos = [];
+      tempReviewAvatar = '';
+      currentReviewIndex = null;
+    }
+
+    function deleteReview(index) {
+      if (confirm('Deseja excluir esta avaliação?')) {
+        reviews.splice(index, 1);
+        saveReviews();
+        renderReviewsList();
+      }
+    }
+
+    function saveReviews() {
+      localStorage.setItem('product_reviews', JSON.stringify(reviews));
+      showSuccess();
+    }
+
+    // Save all
+    function saveAll() {
+      saveProduct();
+      saveStore();
+      saveDescription();
+      savePayment();
+      saveReviews();
+    }
+
+    // Load data on page load - moved inside loadAdminData()
+    // This code now runs inside loadAdminData() function
+    
+    // Load initial product data
+    function loadInitialProductData() {
+      const productData = localStorage.getItem('product_data');
+      if (productData) {
+        const data = JSON.parse(productData);
+        document.getElementById('product-name').value = data.name || '';
+        document.getElementById('product-url').value = data.url || '';
+        document.getElementById('product-price').value = data.price || '';
+        document.getElementById('product-old-price').value = data.oldPrice || '';
+        document.getElementById('product-rating').value = data.rating || '';
+        document.getElementById('product-sold').value = data.sold || '';
+        document.getElementById('product-discount-badge').value = data.discountBadge || '-45%';
+        document.getElementById('product-promo-text').value = data.promoText || 'Desconto de 10%, máximo de R$ 25';
+        
+        // Load images array
+        if (data.images && data.images.length > 0) {
+          productImages = data.images;
+          displayProductImagesPreview();
+        }
+        
+        // Load shipping info
+        if (data.shipping) {
+          document.getElementById('shipping-days-min').value = data.shipping.daysMin || 2;
+          document.getElementById('shipping-days-max').value = data.shipping.daysMax || 6;
+          document.getElementById('shipping-old-fee').value = data.shipping.oldFee || 33.40;
+          document.getElementById('shipping-new-fee').value = data.shipping.newFee || 13.40;
+          document.getElementById('shipping-discount-text').value = data.shipping.discountText || '';
+        }
+        
+        // Load IronPay hashes
+        if (data.ironpay) {
+          document.getElementById('product-offer-hash').value = data.ironpay.offerHash || '';
+          document.getElementById('product-product-hash').value = data.ironpay.productHash || '';
+        }
+      }
+      
+      // Load store
+      const storeData = localStorage.getItem('store_data');
+      if (storeData) {
+        const data = JSON.parse(storeData);
+        document.getElementById('store-name').value = data.name || '';
+        document.getElementById('store-logo').value = data.logo || '';
+        document.getElementById('store-sales').value = data.sales || '';
+        
+        // Display logo preview if exists
+        if (data.logo) {
+          displayStoreLogoPreview(data.logo);
+        }
+      }
+
+      // Load description
+      const description = localStorage.getItem('product_description');
+      if (description) {
+        document.getElementById('product-description').value = description;
+      }
+
+      // Load payment
+      const paymentData = localStorage.getItem('payment_data');
+      if (paymentData) {
+        const data = JSON.parse(paymentData);
+        document.getElementById('pix-qrcode-url').value = data.qrcodeUrl || '';
+        document.getElementById('pix-code').value = data.pixCode || '';
+        document.getElementById('confirmation-url').value = data.confirmationUrl || '';
+      }
+
+      // Load reviews
+      loadReviews();
+      
+      // Load product status (finalized or not)
+      loadProductStatus();
+    }
+  </script>
+</body>
+</html>

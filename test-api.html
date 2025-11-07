@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configurar Gateway IronPay</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: system-ui, -apple-system, sans-serif; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card { 
+      max-width: 600px; 
+      width: 100%;
+      background: #fff; 
+      padding: 40px; 
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    h1 { 
+      color: #1f2328; 
+      margin-bottom: 8px;
+      font-size: 28px;
+    }
+    .subtitle { 
+      color: #6b7280; 
+      margin-bottom: 32px;
+      font-size: 15px;
+    }
+    .info { 
+      background: #dbeafe; 
+      border-left: 4px solid #3b82f6; 
+      padding: 16px; 
+      border-radius: 8px; 
+      margin-bottom: 24px;
+    }
+    .info h3 { 
+      color: #1e40af; 
+      font-size: 14px; 
+      margin-bottom: 8px;
+    }
+    .info ol { 
+      color: #1e40af; 
+      font-size: 13px; 
+      padding-left: 20px; 
+      line-height: 1.8;
+    }
+    .form-group { margin-bottom: 24px; }
+    label { 
+      display: block; 
+      font-weight: 600; 
+      color: #1f2328; 
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    input { 
+      width: 100%; 
+      padding: 14px; 
+      border: 2px solid #e7e9ec; 
+      border-radius: 8px; 
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    input:focus { 
+      outline: none; 
+      border-color: #ff2d55;
+      box-shadow: 0 0 0 3px rgba(255,45,85,0.1);
+    }
+    .help { 
+      font-size: 13px; 
+      color: #6b7280; 
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+    .help code {
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    button { 
+      width: 100%; 
+      padding: 16px; 
+      background: #ff2d55; 
+      color: #fff; 
+      border: 0; 
+      border-radius: 8px; 
+      font-weight: 700; 
+      font-size: 16px; 
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    button:hover { 
+      background: #e02649;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255,45,85,0.3);
+    }
+    .success { 
+      background: #dcfce7; 
+      border-left: 4px solid #10b981; 
+      color: #166534; 
+      padding: 12px 16px; 
+      border-radius: 8px; 
+      margin-bottom: 20px; 
+      display: none;
+      font-weight: 600;
+    }
+    .webhook { 
+      background: #fef3c7; 
+      border-left: 4px solid #f59e0b; 
+      padding: 16px; 
+      border-radius: 8px; 
+      margin-top: 24px;
+    }
+    .webhook p { 
+      color: #92400e; 
+      font-size: 13px; 
+      margin: 0;
+      line-height: 1.6;
+    }
+    .webhook code {
+      background: #fff;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-family: monospace;
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🔌 Configurar Gateway IronPay</h1>
+    <p class="subtitle">Configure o token para gerar QR Codes PIX automaticamente</p>
+    
+    <div class="success" id="success-msg">✅ Configurações salvas com sucesso!</div>
+    
+    <div class="info">
+      <h3>ℹ️ Como funciona:</h3>
+      <ol>
+        <li>Cliente finaliza checkout no seu site</li>
+        <li>Sistema envia dados para <strong>/api/pagar</strong></li>
+        <li>Backend chama <strong>IronPay</strong> com seu token</li>
+        <li>IronPay gera QR Code PIX em tempo real</li>
+        <li>Cliente paga e recebe confirmação automática</li>
+      </ol>
+    </div>
+    
+    <form onsubmit="salvar(event)">
+      <div class="form-group">
+        <label>📍 URL da API *</label>
+        <input type="url" id="url" value="http://localhost:8080/api/pagar" required />
+        <div class="help">
+          <strong>Local:</strong> <code>http://localhost:8080/api/pagar</code><br>
+          <strong>Produção:</strong> <code>https://checkout.shoptiktok.shop/api/pagar</code>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label>🔑 Token IronPay *</label>
+        <input type="password" id="token" placeholder="8FsqLg1ODsBF2WT5WK...QtRox" required />
+        <div class="help">
+          Obtenha em: <strong>Painel IronPay → Integrações → API</strong><br>
+          Cole o Token de Integração API completo
+        </div>
+      </div>
+      
+      <button type="submit">💾 Salvar Configurações</button>
+    </form>
+    
+    <div class="webhook">
+      <p>
+        <strong>🛠️ Webhook (já configurado no server.js):</strong><br>
+        <code>https://checkout.shoptiktok.shop/webhook/ironpay</code><br>
+        <small style="display:block;margin-top:8px;">Configure esta URL no painel do IronPay para receber notificações de pagamento.</small>
+      </p>
+    </div>
+  </div>
+  
+  <script>
+    // Carregar configuração salva ao abrir a página
+    window.onload = function() {
+      const saved = localStorage.getItem('gateway_config');
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          if (data.customUrl) {
+            document.getElementById('url').value = data.customUrl;
+          }
+          if (data.apiKey) {
+            document.getElementById('token').value = data.apiKey;
+          }
+          console.log('✅ Configuração carregada:', data);
+        } catch (e) {
+          console.error('❌ Erro ao carregar:', e);
+        }
+      }
+    };
+    
+    // Salvar configuração
+    function salvar(event) {
+      event.preventDefault();
+      
+      const apiUrl = document.getElementById('url').value.trim();
+      const token = document.getElementById('token').value.trim();
+      
+      const data = {
+        provider: 'custom',
+        customUrl: apiUrl,
+        baseUrl: apiUrl,
+        apiKey: token,
+        clientSecret: token
+      };
+      
+      // Salvar no localStorage
+      localStorage.setItem('gateway_config', JSON.stringify(data));
+      
+      // Mostrar mensagem de sucesso
+      const successMsg = document.getElementById('success-msg');
+      successMsg.style.display = 'block';
+      setTimeout(() => {
+        successMsg.style.display = 'none';
+      }, 4000);
+      
+      console.log('✅ Gateway configurado:', data);
+      alert('✅ Configurações do IronPay salvas!\n\nAgora você pode testar o checkout.\nOs QR Codes PIX serão gerados automaticamente via IronPay.');
+    }
+  </script>
+</body>
+</html>
