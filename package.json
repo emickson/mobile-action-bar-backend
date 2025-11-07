@@ -1,6 +1,16 @@
 {
+  "name": "mobile-action-bar-backend",
+  "version": "1.0.0",
+  "description": "Backend API para e-commerce mobile",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.x"
+  },
   "dependencies": {
-    "express": "^5.1.0",
-    "https": "^1.0.0"
+    "express": "^5.1.0"
   }
 }
