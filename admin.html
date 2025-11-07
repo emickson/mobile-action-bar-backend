@@ -2260,6 +2260,14 @@ Capacidade de Carga de 150KG: Suporta até 150KG.</textarea>
       localStorage.setItem('product_reviews', JSON.stringify(reviews));
       showSuccess();
     }
+    
+    // Save reviews count display
+    function saveReviewsCount() {
+      const count = document.getElementById('reviews-count-display').value;
+      localStorage.setItem('reviews_count_display', count);
+      showSuccess();
+      console.log('✅ Número de avaliações salvo:', count);
+    }
 
     // Save all
     function saveAll() {

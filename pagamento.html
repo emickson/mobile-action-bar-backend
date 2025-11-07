@@ -401,6 +401,15 @@
           `;
         }
         
+        // Verificação automática de status (DENTRO do try para acessar 'data')
+        if (data.transactionId || data.hash) {
+          const txId = data.transactionId || data.hash;
+          console.log('🔄 Iniciando monitoramento de pagamento:', txId);
+          startPaymentStatusCheck(txId, data.hash);
+        } else {
+          console.warn('⚠️ Transaction ID não encontrado, verificação automática desativada');
+        }
+        
         } catch (error) {
           console.error('❌ Erro ao processar dados do pagamento:', error);
           const qrCodeDiv = document.getElementById('qr-code');
@@ -412,15 +421,6 @@
               </div>
             `;
           }
-        }
-        
-        // Verificação automática de status
-        if (data.transactionId || data.hash) {
-          const txId = data.transactionId || data.hash;
-          console.log('🔄 Iniciando monitoramento de pagamento:', txId);
-          startPaymentStatusCheck(txId, data.hash);
-        } else {
-          console.warn('⚠️ Transaction ID não encontrado, verificação automática desativada');
         }
         
       } else {
