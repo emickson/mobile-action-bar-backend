@@ -580,7 +580,8 @@
               productHash: productHash, // Hash do produto (IronPay)
               cart: [
                 {
-                  product_hash: productHash,
+                  product_id: productId || '1', // ID do produto para validação de preço
+                  product_hash: productHash, // Hash IronPay (opcional, gerado automaticamente)
                   title: productData.name || 'Produto',
                   cover: null,
                   price: Math.round(total * 100),
@@ -765,6 +766,10 @@
       });
     });
   </script>
+  
+  <!-- Configurações Centralizadas -->
+  <script src="js/config.js?v=2024110701"></script>
+  <script src="js/logger.js?v=2024110701"></script>
   
   <!-- Payment Gateway Integration -->
   <script src="js/payment-gateway.js?v=2024110701"></script>
