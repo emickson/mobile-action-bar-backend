@@ -8,9 +8,9 @@
       "stock": 100,
       "active": true,
       "ironpay": {
-        "offerHash": null,
-        "productHash": null,
-        "_note": "Hashes são opcionais. Se null, o IronPay criará automaticamente na primeira transação."
+        "offerHash": "o92diy3b7r",
+        "productHash": "ykw8qcy25o",
+        "_note": "Hashes configurados do painel IronPay"
       },
       "createdAt": "2024-11-07T00:00:00.000Z",
       "updatedAt": "2024-11-07T00:00:00.000Z"

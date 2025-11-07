@@ -262,8 +262,9 @@ const serverHandler = (req, res) => {
               totalCalculado += product.price * quantity;
             }
             
-            // Permitir pequena diferença (arredondamento)
-            const diferencaAceitavel = 10; // 10 centavos
+            // Permitir diferença para frete e descontos
+            // TODO: Enviar valor do frete separadamente do frontend
+            const diferencaAceitavel = 2000; // R$ 20,00 (considera frete)
             const diferenca = Math.abs(amount - totalCalculado);
             
             if (diferenca > diferencaAceitavel) {
