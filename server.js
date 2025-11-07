@@ -61,6 +61,32 @@ const serverHandler = (req, res) => {
     return;
   }
 
+  // Handle HEAD (usado para verificar se servidor está online)
+  if (req.method === 'HEAD') {
+    res.writeHead(200);
+    res.end();
+    return;
+  }
+
+  // ========================================
+  // ENDPOINT: /health (Health Check)
+  // Verifica se o servidor está online
+  // ========================================
+  if (req.url === '/health' || req.url === '/api/health') {
+    res.writeHead(200, {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*'
+    });
+    res.end(JSON.stringify({
+      status: 'ok',
+      message: 'Servidor online',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      env: NODE_ENV
+    }));
+    return;
+  }
+
   // ========================================
   // ENDPOINT: /api/validate-ironpay (Documentação)
   // ========================================

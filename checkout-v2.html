@@ -368,16 +368,39 @@
     // Função para verificar se o backend Node.js está disponível
     async function checkBackendAvailable() {
       try {
-        const response = await fetch('/api/pagar', { 
+        console.log('🔍 Verificando backend...');
+        
+        // Tentar endpoint de health check primeiro
+        const response = await fetch('/health', { 
+          method: 'GET',
+          cache: 'no-cache',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        
+        console.log('📊 Status do backend:', response.status);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('✅ Backend online:', data.message);
+          return true;
+        }
+        
+        // Fallback: tentar /api/pagar com HEAD
+        const fallbackResponse = await fetch('/api/pagar', { 
           method: 'HEAD',
           cache: 'no-cache'
         });
-        // Se retornar qualquer resposta HTTP (incluindo 404 de método OPTIONS)
-        // significa que o servidor Node.js está respondendo
-        return response.status !== 404;
+        
+        // Qualquer resposta diferente de erro de rede significa que o servidor está lá
+        const isOnline = fallbackResponse.status < 500;
+        console.log(isOnline ? '✅ Backend disponível (fallback)' : '❌ Backend offline');
+        return isOnline;
+        
       } catch (error) {
         // Se der erro de rede, significa que não tem servidor Node.js rodando
-        console.warn('⚠️ Backend Node.js não encontrado:', error.message);
+        console.error('❌ Backend Node.js não encontrado:', error.message);
         return false;
       }
     }
