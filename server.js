@@ -363,7 +363,8 @@ const serverHandler = (req, res) => {
           port: url.port || 443,
           path: url.pathname + url.search, // Incluir query string (api_token para IronPay)
           method: 'POST',
-          headers: headers
+          headers: headers,
+          timeout: 10000 // ⏱️ OTIMIZAÇÃO: Timeout de 10s
         };
         
         // MODO DE TESTE: Se token começar com 'test_', simula resposta

@@ -448,6 +448,10 @@
       const estado = document.getElementById('estado').value.trim();
 
       if (!nome || !email || !telefone || !cpf || !cep || !endereco || !numero || !bairro || !cidade || !estado) {
+        if (btn) {
+          btn.textContent = originalText;
+          btn.disabled = false;
+        }
         alert('⚠️ Por favor, preencha todos os campos obrigatórios!');
         return;
       }
@@ -545,17 +549,8 @@
           console.log('   Product Hash:', productHash || 'AUSENTE');
           console.log('   Token API presente?', apiKey ? 'SIM' : 'NÃO (servidor usará env)');
           
-          // Detectar se o backend está disponível
-          const isBackendAvailable = await checkBackendAvailable();
-          
-          if (!isBackendAvailable) {
-            console.warn('⚠️ Backend não disponível. Usando modo direto (apenas para testes).');
-            // Modo de fallback - você precisará implementar lógica alternativa aqui
-            // Por exemplo: redirecionar para página de PIX manual
-            alert('⚠️ Sistema em modo limitado. Configure o gateway ou use VPS.');
-            window.location.href = `pagamento.html?total=R$ ${totalFormatted}&shipping=${shipping}&qty=${qty}&mode=manual`;
-            return;
-          }
+          // ⏱️ OTIMIZAÇÃO: Remover checkBackendAvailable() - o fetch já vai falhar se backend offline
+          // Economia: ~500-1000ms por requisição
           
           // Construir URL do endpoint usando a variável BACKEND_URL configurada
           const backendURL = `${BACKEND_URL}/api/pagar`;
@@ -567,23 +562,21 @@
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-              amount: Math.round(total * 100), // Converter para centavos
-              description: `Compra: ${productData.name || 'Produto'} - Loja Online`, // Descrição profissional
-              apiKey: apiKey, // Pode ser null - servidor usa env
-              offerHash: offerHash, // Hash da oferta (IronPay)
-              productHash: productHash, // Hash do produto (IronPay)
-              cart: [
-                {
-                  product_id: productId || '1', // ID do produto para validação de preço
-                  product_hash: productHash, // Hash IronPay (opcional, gerado automaticamente)
-                  title: productData.name || 'Produto',
-                  cover: null,
-                  price: Math.round(total * 100),
-                  quantity: qty,
-                  operation_type: 1,
-                  tangible: false
-                }
-              ],
+              amount: Math.round(total * 100),
+              description: productData.name || 'Produto',
+              apiKey: apiKey,
+              offerHash: offerHash,
+              productHash: productHash,
+              // ⏱️ OTIMIZAÇÃO: Payload reduzido - somente campos necessários
+              cart: [{
+                product_id: productId || '1',
+                product_hash: productHash,
+                title: productData.name || 'Produto',
+                price: Math.round(total * 100),
+                quantity: qty,
+                operation_type: 1,
+                tangible: false
+              }],
               customer: {
                 name: nome.trim(), // Remover espaços extras
                 email: email.trim().toLowerCase(), // Email padronizado
@@ -745,7 +738,12 @@
       } catch (error) {
         cepLoading.classList.remove('show');
         this.classList.add('error');
-        cepError.textContent = 'Erro ao buscar CEP';
+        // ⏱️ OTIMIZAÇÃO: Mensagem específica para timeout
+        if (error.name === 'AbortError') {
+          cepError.textContent = 'Busca de CEP demorou muito. Preencha manualmente.';
+        } else {
+          cepError.textContent = 'Erro ao buscar CEP';
+        }
         cepError.classList.add('show');
       }
     });
