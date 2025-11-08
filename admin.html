@@ -1293,6 +1293,23 @@ Capacidade de Carga de 150KG: Suporta até 150KG.</textarea>
       document.getElementById('product-offer-hash').value = '';
       document.getElementById('product-product-hash').value = '';
       
+      // Limpar URL gerada e status de finalizado
+      document.getElementById('product-status').value = 'rascunho';
+      document.getElementById('product-generated-url').value = '';
+      document.getElementById('product-url-container').style.display = 'none';
+      
+      // Resetar botão de finalizar
+      const finalizeBtn = document.getElementById('finalize-btn');
+      if (finalizeBtn) {
+        finalizeBtn.textContent = '✅ Finalizar e Publicar';
+        finalizeBtn.disabled = false;
+        finalizeBtn.style.opacity = '1';
+      }
+      
+      // Limpar product_data do localStorage
+      localStorage.removeItem('product_data');
+      localStorage.removeItem('current_product_id');
+      
       alert('Formulário limpo! Preencha os dados do novo produto e clique em "Salvar Produto".');
     }
     
