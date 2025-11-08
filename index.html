@@ -752,8 +752,7 @@ Capacidade de Carga de 150KG: Suporta até 150KG.
       }
 
       // Load product data from admin
-      function loadProductData() {
-        // Get product ID from URL query parameter
+      async function loadProductData() {
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('produto');
         
@@ -763,29 +762,59 @@ Capacidade de Carga de 150KG: Suporta até 150KG.
         let productData;
         
         if (productId) {
-          // Try to find product in all_products array
-          const allProductsData = localStorage.getItem('all_products');
-          if (allProductsData) {
-            const allProducts = JSON.parse(allProductsData);
-            const product = allProducts.find(p => p.id == productId);
-            if (product) {
-              // Merge with current product_data to get images (not saved in list)
-              const currentData = localStorage.getItem('product_data');
-              if (currentData) {
-                const current = JSON.parse(currentData);
-                if (current.id == productId && current.images) {
-                  product.images = current.images;
-                }
+          // 🚀 NOVO: Buscar produtos do servidor PRIMEIRO (funciona em mobile)
+          try {
+            const BACKEND_URL = 'https://mobile-action-bar-production.up.railway.app';
+            console.log('📶 Buscando produtos do servidor...');
+            
+            const response = await fetch(`${BACKEND_URL}/api/produtos`, {
+              method: 'GET',
+              headers: { 'Content-Type': 'application/json' }
+            });
+            
+            if (response.ok) {
+              const allProducts = await response.json();
+              console.log('✅ Produtos carregados do servidor:', allProducts.length);
+              
+              const product = allProducts.find(p => p.id == productId);
+              if (product) {
+                productData = JSON.stringify(product);
+                console.log('✅ Produto encontrado:', product.name);
+                console.log('📱 Funcionando em MOBILE!');
+              } else {
+                console.warn('⚠️ Produto ID', productId, 'não encontrado no servidor');
               }
-              productData = JSON.stringify(product);
-              console.log('✅ Produto encontrado na lista:', product.name);
-            } else {
-              console.warn('⚠️ Produto não encontrado na lista!');
+            }
+          } catch (error) {
+            console.warn('⚠️ Servidor offline, tentando localStorage...');
+            console.error(error.message);
+          }
+          
+          // Fallback: Buscar do localStorage (funciona apenas no PC do admin)
+          if (!productData) {
+            console.log('💾 Tentando localStorage...');
+            const allProductsData = localStorage.getItem('all_products');
+            if (allProductsData) {
+              const allProducts = JSON.parse(allProductsData);
+              const product = allProducts.find(p => p.id == productId);
+              if (product) {
+                const currentData = localStorage.getItem('product_data');
+                if (currentData) {
+                  const current = JSON.parse(currentData);
+                  if (current.id == productId && current.images) {
+                    product.images = current.images;
+                  }
+                }
+                productData = JSON.stringify(product);
+                console.log('✅ Produto encontrado no localStorage:', product.name);
+              } else {
+                console.warn('⚠️ Produto não encontrado no localStorage!');
+              }
             }
           }
         }
         
-        // Fallback to default product_data if not found
+        // Fallback final: produto padrão
         if (!productData) {
           console.log('📄 Usando produto padrão...');
           productData = localStorage.getItem('product_data');

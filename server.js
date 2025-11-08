@@ -68,22 +68,76 @@ const serverHandler = (req, res) => {
     return;
   }
 
+  const { pathname, method } = url.parse(req.url, true);
+
   // ========================================
   // ENDPOINT: /health (Health Check)
   // Verifica se o servidor está online
   // ========================================
-  if (req.url === '/health' || req.url === '/api/health') {
-    res.writeHead(200, {
+  if (pathname === '/health') {
+    res.writeHead(200, { 
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*'
     });
-    res.end(JSON.stringify({
-      status: 'ok',
-      message: 'Servidor online',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      env: NODE_ENV
+    res.end(JSON.stringify({ 
+      status: 'ok', 
+      message: 'Backend online',
+      timestamp: new Date().toISOString()
     }));
+    return;
+  }
+  
+  // Endpoint para salvar produtos
+  if (pathname === '/api/produtos' && method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk.toString());
+    req.on('end', () => {
+      try {
+        const products = JSON.parse(body);
+        fs.writeFileSync('products.json', JSON.stringify(products, null, 2));
+        console.log('✅ Produtos salvos:', products.length);
+        res.writeHead(200, { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        });
+        res.end(JSON.stringify({ success: true, count: products.length }));
+      } catch (error) {
+        console.error('❌ Erro ao salvar produtos:', error);
+        res.writeHead(500, { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        });
+        res.end(JSON.stringify({ error: error.message }));
+      }
+    });
+    return;
+  }
+  
+  // Endpoint para buscar produtos
+  if (pathname === '/api/produtos' && method === 'GET') {
+    try {
+      if (fs.existsSync('products.json')) {
+        const products = JSON.parse(fs.readFileSync('products.json', 'utf8'));
+        res.writeHead(200, { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        });
+        res.end(JSON.stringify(products));
+      } else {
+        res.writeHead(200, { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        });
+        res.end(JSON.stringify([]));
+      }
+    } catch (error) {
+      console.error('❌ Erro ao buscar produtos:', error);
+      res.writeHead(500, { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      });
+      res.end(JSON.stringify({ error: error.message }));
+    }
     return;
   }
 

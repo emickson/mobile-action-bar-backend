@@ -1365,7 +1365,7 @@ Capacidade de Carga de 150KG: Suporta até 150KG.</textarea>
       alert(`Produto excluído! Lembre-se de deletar o arquivo produto-${product.id}.html manualmente do servidor.`);
     }
     
-    function saveProducts() {
+    async function saveProducts() {
       // Create lightweight version without heavy base64 images
       const lightweightProducts = allProducts.map(product => {
         const light = { ...product };
@@ -1380,12 +1380,37 @@ Capacidade de Carga de 150KG: Suporta até 150KG.</textarea>
         return light;
       });
       
+      // Salvar no localStorage (local)
       try {
         localStorage.setItem('all_products', JSON.stringify(lightweightProducts));
-        console.log('✅ Lista de produtos salva (' + lightweightProducts.length + ' produtos)');
+        console.log('✅ Produtos salvos localmente (' + lightweightProducts.length + ' produtos)');
       } catch (e) {
-        console.error('❌ Erro ao salvar lista:', e.message);
-        alert('⚠️ Erro: Lista de produtos muito grande. Considere usar menos produtos ou imagens menores.');
+        console.error('❌ Erro ao salvar localmente:', e.message);
+        alert('⚠️ Erro: Lista de produtos muito grande.');
+        return;
+      }
+      
+      // 🚀 NOVO: Salvar no servidor Railway (para acesso móvel)
+      try {
+        const BACKEND_URL = 'https://mobile-action-bar-production.up.railway.app';
+        console.log('📤 Enviando produtos para servidor...');
+        
+        const response = await fetch(`${BACKEND_URL}/api/produtos`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(allProducts) // Enviar produtos COMPLETOS (com imagens)
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('✅ Produtos salvos no servidor:', data.count);
+          console.log('📱 Agora produtos estão disponíveis para mobile!');
+        } else {
+          console.warn('⚠️ Falha ao salvar no servidor (apenas local funciona)');
+        }
+      } catch (error) {
+        console.warn('⚠️ Servidor offline, produtos salvos apenas localmente');
+        console.error(error.message);
       }
     }
     
